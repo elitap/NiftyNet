@@ -142,7 +142,8 @@ def run(net_class, param, volume_loader, device_str):
                             batchnorm_updates_op)
         write_summary_op = tf.summary.merge(summaries)
         # saver
-        saver = tf.train.Saver(max_to_keep=20)
+        variables_to_restore = variable_averages.variables_to_restore()
+        saver = tf.train.Saver(max_to_keep=20, var_list=variables_to_restore)
         tf.Graph.finalize(graph)
     # run session
     config = tf.ConfigProto()
