@@ -114,6 +114,18 @@ class ResizeSampler(Layer, InputBatchQueueRunner):
                 # [enqueue_batch_size, x, y, z, time, modality]
                 # here enqueue_batch_size = 1 as we only have one sample
                 # per image
+
+                for tensor in output_dict:
+                    if "label:0" in tensor.name:
+                        windows_per_volume = int(output_dict[tensor].shape[0])
+                        label_inside_cnt = 0
+                        for i in range(windows_per_volume):
+                            unique, cnt = np.unique(output_dict[tensor][i], return_counts=True)
+                            if len(unique) > 1:
+                                label_inside_cnt += 1
+                                print("Label detected, foreground background ratio is: ", sum(cnt[1:]) / cnt[0])
+                        print(windows_per_volume, " windows sampled, ", label_inside_cnt, " contain label info")
+
                 yield output_dict
 
 
