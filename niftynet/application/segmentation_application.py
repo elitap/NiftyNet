@@ -239,6 +239,14 @@ class SegmentationApplication(BaseApplication):
             grads = self.optimiser.compute_gradients(loss)
             # collecting gradients variables
             gradients_collector.add_to_collection([grads])
+
+            for cnt, grad in enumerate(grads):
+                outputs_collector.add_to_collection(
+                    var=grad[0], name='layer_' + str(cnt) + "_gradients",
+                    average_over_devices=True, summary_type='histogram',
+                    collection=TF_SUMMARIES)
+
+
             # collecting output variables
             outputs_collector.add_to_collection(
                 var=data_loss, name='dice_loss',
