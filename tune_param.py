@@ -4,7 +4,7 @@ import os
 import sys
 
 ENDING = [".ini"]
-CONFIGS = "/home/elias/Dokumente/head_neck_seg/NiftyNet/config/tune_configs"
+CONFIGS = "./config/tune_configs"
 
 DONE = ["full_e-3_96-1_dice_50k_1024s.ini", "quarter_e-5_48-8_gdsc_50k_1024s.ini"]
 
