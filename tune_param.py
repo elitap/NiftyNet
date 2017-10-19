@@ -61,8 +61,8 @@ def run_tests(gpu, pc):
                 fullfile = os.path.join(CONFIGS, file)
 
                 cmd = "python net_segment.py train -c " + fullfile + " --cuda_devices " + str(gpu)
-                if file not in DONE and (pc == 0 and file in MYPC) and (pc == 1 and file in OTHERPC):
-                    if gpu == 0 and "dice" in file and file not in DONE:
+                if file not in DONE and ((pc == 0 and file in MYPC) or (pc == 1 and file in OTHERPC)):
+                    if gpu == 0 and "dice" in file:
                         exec_niftynet(cmd, fptr)
                     if gpu == 1 and "gdsc" in file:
                         exec_niftynet(cmd, fptr)
