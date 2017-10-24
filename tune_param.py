@@ -6,7 +6,7 @@ import sys
 ENDING = [".ini"]
 CONFIGS = "./config/tune_configs"
 
-DONE = ["quarter_e-5_48-8_gdsc_50k_1024s.ini", "half_e-3_96-1_dice_50k_1024s.ini", "half_e-3_48-8_dice_50k_1024s.ini", "half_e-3_48-8_gdsc_50k_1024s.ini", "full_e-5_96-1_gdsc_50k_1024s.ini", "half_e-4_48-8_dice_50k_1024s.ini", "half_e-3_96-1_gdsc_50k_1024s.ini", "pc2_sep", "quarter_e-5_48-8_dice_50k_1024s.ini","quarter_e-4_48-8_gdsc_50k_1024s.ini", "half_e-5_96-1_dice_50k_1024s.ini", "half_e-5_48-8_gdsc_50k_1024s.ini",  "half_e-5_48-8_dice_50k_1024s.ini"]
+DONE = ["quarter_e-5_48-8_gdsc_50k_1024s.ini", "half_e-3_96-1_dice_50k_1024s.ini", "half_e-3_48-8_dice_50k_1024s.ini", "half_e-3_48-8_gdsc_50k_1024s.ini", "full_e-5_96-1_gdsc_50k_1024s.ini", "half_e-4_48-8_dice_50k_1024s.ini", "half_e-3_96-1_gdsc_50k_1024s.ini", "pc2_sep", "quarter_e-5_48-8_dice_50k_1024s.ini","quarter_e-4_48-8_gdsc_50k_1024s.ini", "half_e-5_96-1_dice_50k_1024s.ini", "half_e-5_48-8_gdsc_50k_1024s.ini",  "half_e-5_48-8_dice_50k_1024s.ini", "quarter_e-3_48-8_gdsc_50k_1024s.ini", "quarter_e-4_48-8_dice_50k_1024s.ini"]
 
 #
 #"half_e-3_96-1_dice_50k_1024s.ini",
@@ -24,18 +24,18 @@ MYPC = ["full_e-5_96-1_dice_50k_1024s.ini" #running auto
         "half_e-4_48-8_gdsc_50k_1024s.ini",  #running manually
         "quarter_e-5_48-8_gdsc_50k_1024s.ini"] #38000 Done
 
-# not fully done
+#"quarter_e-5_48-8_gdsc_50k_1024s.ini" not fully done
 #"quarter_e-5_48-8_dice_50k_1024s.ini"
 #"quarter_e-4_48-8_gdsc_50k_1024s.ini"
 #"half_e-5_96-1_dice_50k_1024s.ini",
 #"half_e-5_48-8_gdsc_50k_1024s.ini",
 #"half_e-5_48-8_dice_50k_1024s.ini",
+#"quarter_e-3_48-8_gdsc_50k_1024s.ini",
+#"quarter_e-4_48-8_dice_50k_1024s.ini",
 OTHERPC = ["half_e-4_96-1_dice_50k_1024s.ini", #13312 Done 
             "half_e-4_96-1_gdsc_50k_1024s.ini", #7170 Done
-            "half_e-5_96-1_gdsc_50k_1024s.ini", 
-            "quarter_e-3_48-8_dice_50k_1024s.ini",
-            "quarter_e-3_48-8_gdsc_50k_1024s.ini",
-            "quarter_e-4_48-8_dice_50k_1024s.ini"]
+            "half_e-5_96-1_gdsc_50k_1024s.ini",
+	    "quarter_e-3_48-8_dice_50k_1024s.ini"] #17192
 
 
 
@@ -66,7 +66,7 @@ def run_tests(gpu, pc):
                 cmd = "python net_segment.py train -c " + fullfile + " --cuda_devices " + str(gpu)
                 #print file, file in DONE, (pc == 0 and file in MYPC), (pc == 1 and file in OTHERPC)
                 if file not in DONE and ((pc == 0 and file in MYPC) or (pc == 1 and file in OTHERPC)):
-                    if (gpu == 0 and "48-8" in file) or (gpu == 1 and "96-1" in file):
+                    if (gpu == 0 and "dice" in file) or (gpu == 1 and "gdsc" in file):
                         exec_niftynet(cmd, fptr)
 
 def exec_niftynet(cmd, fptr):
