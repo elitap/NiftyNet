@@ -36,7 +36,7 @@ def run_inference(configs, gpu):
             for config in fptr:
                 config = config.strip()
                 if (gpu == 0 and "dice" in config) or (gpu == 1 and "gdsc" in config):
-                    border = "(8, 8, 8)" if "48-8" in config else "(16, 16, 16)"
+                    border = "\"(8, 8, 8)\"" if "48-8" in config else "\"(16, 16, 16)\""
                     checkpoints = range(12000, 50000, 2000)
                     checkpoints.append(49999)
                     full_config = os.path.join(CONFIG_BASE, config)
