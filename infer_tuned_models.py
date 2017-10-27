@@ -28,7 +28,7 @@ def execute(command):
 
 def run_inference(configs, gpu):
 
-    log = LOGFILE % gpu
+    log = (LOGFILE) % gpu
     if not os.path.exists(log):
         open(log, 'x')
     with open(log, "a") as logptr:
