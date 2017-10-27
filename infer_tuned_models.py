@@ -7,7 +7,7 @@ import time
 CONFIG_BASE = "./config/tune_configs"
 LOGFILE = "tune_models/log/inferencelog_gpu%d.txt"
 
-INFERENCE_CMD = "python net_segment.py inference -c %s --border %s --save_seg_dir %s --inference_iter %d"
+INFERENCE_CMD = "python net_segment.py inference -c %s --border %s --save_seg_dir %s --inference_iter %d --cuda_devices %d"
 SAVE_DIR_BASE = "output"
 
 def execute(command):
@@ -41,7 +41,7 @@ def run_inference(configs, gpu):
                     checkpoints.append(49999)
                     full_config = os.path.join(CONFIG_BASE, config)
                     for checkpoint in checkpoints:
-                        cmd = INFERENCE_CMD % (full_config, border, os.path.join(SAVE_DIR_BASE,str(checkpoint)), checkpoint)
+                        cmd = INFERENCE_CMD % (full_config, border, os.path.join(SAVE_DIR_BASE,str(checkpoint)), checkpoint, gpu)
                         logptr.write("execute " + cmd + " \n")
                         logptr.flush()
                         start = time.time()
