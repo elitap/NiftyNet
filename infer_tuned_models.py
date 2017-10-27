@@ -5,6 +5,7 @@ import sys
 import time
 
 CONFIG_BASE = "./config/tune_configs"
+LOGFILE = "tune_models/log/inferencelog_gpu%d.txt"
 
 INFERENCE_CMD = "python net_segment.py inference -c %s --border %s --save_seg_dir %s --inference_iter %d"
 SAVE_DIR_BASE = "output"
@@ -26,7 +27,11 @@ def execute(command):
     return exitCode
 
 def run_inference(configs, gpu):
-    with open("tune_model/log/inferencelog_gpu%d.txt" % gpu, "a") as logptr:
+
+    log = LOGFILE % gpu
+    if not os.path.exists(log):
+        open(log, 'x')
+    with open(log, "a") as logptr:
         with open(configs, "r") as fptr:
             for config in fptr:
                 config = config.strip()
