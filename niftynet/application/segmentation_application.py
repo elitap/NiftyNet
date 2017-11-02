@@ -27,7 +27,9 @@ from niftynet.layer.rand_flip import RandomFlipLayer
 from niftynet.layer.rand_rotation import RandomRotationLayer
 from niftynet.layer.rand_spatial_scaling import RandomSpatialScalingLayer
 
-SUPPORTED_INPUT = {'image', 'label', 'weight', 'sampler'}
+SUPPORTED_TRAINING_INPUT = {'image', 'label', 'weight', 'sampler'}
+SUPPORTED_INFERENCE_INPUT = {'image', 'foreground'}
+SUPPORTED_INPUT = SUPPORTED_INFERENCE_INPUT | SUPPORTED_TRAINING_INPUT
 
 
 class SegmentationApplication(BaseApplication):
@@ -55,15 +57,19 @@ class SegmentationApplication(BaseApplication):
                        self.initialise_resize_aggregator),
         }
 
+
     def initialise_dataset_loader(self, data_param=None, task_param=None):
         self.data_param = data_param
         self.segmentation_param = task_param
 
         # read each line of csv files into an instance of Subject
         if self.is_training:
-            self.reader = ImageReader(SUPPORTED_INPUT)
-        else:  # in the inference process use image input only
-            self.reader = ImageReader(['image'])
+            self.reader = ImageReader(SUPPORTED_TRAINING_INPUT)
+        else:  # inference #TODO maybe make that check nicer
+            if self.action_param.inference_sampling == 'foreground':
+                self.reader = ImageReader(SUPPORTED_INFERENCE_INPUT)
+            else:
+                self.reader = ImageReader(SUPPORTED_INFERENCE_INPUT - {'foreground'})
         self.reader.initialise_reader(data_param, task_param)
 
         if self.net_param.normalise_foreground_only:
@@ -165,7 +171,8 @@ class SegmentationApplication(BaseApplication):
             batch_size=self.net_param.batch_size,
             spatial_window_size=self.action_param.spatial_window_size,
             window_border=self.action_param.border,
-            queue_length=self.net_param.queue_length)]
+            queue_length=self.net_param.queue_length,
+            foreground_name='foreground')]
 
     def initialise_grid_aggregator(self):
         self.output_decoder = GridSamplesAggregator(
@@ -240,11 +247,11 @@ class SegmentationApplication(BaseApplication):
             # collecting gradients variables
             gradients_collector.add_to_collection([grads])
 
-            for cnt, grad in enumerate(grads):
-                outputs_collector.add_to_collection(
-                    var=grad[0], name='layer_' + str(cnt) + "_gradients",
-                    average_over_devices=True, summary_type='histogram',
-                    collection=TF_SUMMARIES)
+            #for cnt, grad in enumerate(grads):
+            #    outputs_collector.add_to_collection(
+            #        var=grad[0], name='layer_' + str(cnt) + "_gradients",
+            #        average_over_devices=True, summary_type='histogram',
+            #        collection=TF_SUMMARIES)
 
 
             # collecting output variables

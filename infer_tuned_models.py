@@ -4,7 +4,7 @@ import os
 import sys
 import time
 
-CONFIG_BASE = "./config/tune_configs"
+CONFIG_BASE = "./config/tune_configs_2nd"
 LOGFILE = "tune_models/log/inferencelog_gpu%d.txt"
 
 INFERENCE_CMD = "python net_segment.py inference -c %s --border %s --save_seg_dir %s --inference_iter %d --cuda_devices %d"
@@ -35,8 +35,8 @@ def run_inference(configs, gpu):
         with open(configs, "r") as fptr:
             for config in fptr:
                 config = config.strip()
-                if (gpu == 0 and "dice" in config) or (gpu == 1 and "gdsc" in config):
-                    border = "\"(8, 8, 8)\"" if "48-8" in config else "\"(16, 16, 16)\""
+                if (gpu == 0 and "24-24" in config) or (gpu == 1 and "48-8" in config):
+                    border = "\"(8, 8, 8)\"" if ("48-8" in config or "24-24" in config) else "\"(16, 16, 16)\""
                     checkpoints = range(12000, 50000, 2000)
                     checkpoints.append(49999)
                     full_config = os.path.join(CONFIG_BASE, config)
