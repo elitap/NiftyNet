@@ -69,6 +69,9 @@ class GridSampler(Layer, InputBatchQueueRunner):
             coordinates = grid_spatial_coordinates(
                 image_id, image_shapes, static_window_shapes, self.border_size)
 
+            if self.foreground_name in data:
+                coordinates = self.filter_foreground_coordinates(coordinates, data, image_shapes)
+
             # extend the number of sampling locations to be divisible
             # by batch size
             n_locations = list(coordinates.values())[0].shape[0]
@@ -96,7 +99,6 @@ class GridSampler(Layer, InputBatchQueueRunner):
                 idx = i % n_locations
                 #  initialise output dict
                 output_dict = {}
-                valid_output = True
                 for name in list(data):
                     if name is self.foreground_name:
                         continue
@@ -108,13 +110,6 @@ class GridSampler(Layer, InputBatchQueueRunner):
                     try:
                         image_window = data[name][
                             x_start:x_end, y_start:y_end, z_start:z_end, ...]
-                        if self.foreground_name in list(data) and self.foreground_name in data:
-                            foreground_window = data[self.foreground_name][
-                            x_start:x_end, y_start:y_end, z_start:z_end, ...]
-                            if not np.any(foreground_window.flatten()):
-                                # no foreground in window skip for inference
-                                skipped_locations.append(i)
-                                valid_output = False
 
                     except ValueError:
                         tf.logging.fatal(
@@ -123,19 +118,44 @@ class GridSampler(Layer, InputBatchQueueRunner):
                             "3D tuple and make sure each element is "
                             "smaller than the image length in each dim.")
                         raise
-                    if valid_output:
-                        # fill output dict with data
-                        coordinates_key = self.window.coordinates_placeholder(name)
-                        image_data_key = self.window.image_data_placeholder(name)
-                        output_dict[coordinates_key] = coordinates[name][[idx], ...]
-                        output_dict[image_data_key] = image_window[np.newaxis, ...]
 
-                # just yield if dict is not empty
-                if output_dict:
-                    yield output_dict
-            #todo somehow also print that
-            #if self.foreground_name in list(data):
-            #    tf.logging.info("%d locations are skipped as no foreground was detected", len(skipped_locations))
+                    coordinates_key = self.window.coordinates_placeholder(name)
+                    image_data_key = self.window.image_data_placeholder(name)
+                    output_dict[coordinates_key] = coordinates[name][[idx], ...]
+                    output_dict[image_data_key] = image_window[np.newaxis, ...]
+
+                yield output_dict
+
+
+
+    def filter_foreground_coordinates(self, coordinates, data, image_shapes):
+        for shape in image_shapes.values():
+            assert shape == data[self.foreground_name].shape, "Mode found with different shape than the foreground. " \
+                                                              "Foreground based grid sampling is not supported for different" \
+                                                              "sized modes."
+
+        # use first mode to get coordinates, this is valid as all modes must have the same shape as the foreground
+        coordinates_key = self.window.names[0]
+        new_coordinates = dict()
+        forground_coordinate_cnt = 0
+        # iterate over all coordinates
+        for i in range(list(coordinates.values())[0].shape[0]):
+            x_start, y_start, z_start, x_end, y_end, z_end = coordinates[coordinates_key][i, 1:]
+            foreground_window = data[self.foreground_name][x_start:x_end, y_start:y_end, z_start:z_end, ...]
+
+            # foreground detected
+            if np.any(foreground_window.flatten()):
+                forground_coordinate_cnt += 1
+                for name in self.window.names:
+                    if name not in new_coordinates:
+                        new_coordinates[name] = []
+                    new_coordinates[name].append(coordinates[coordinates_key][i, 0:])
+
+        # cast to nparray
+        for name in self.window.names:
+            new_coordinates[name] = np.array(new_coordinates[name])
+        tf.logging.info('%d locations containing foreground information found', forground_coordinate_cnt)
+        return new_coordinates
 
 
 def grid_spatial_coordinates(subject_id, img_sizes, win_sizes, border_size):

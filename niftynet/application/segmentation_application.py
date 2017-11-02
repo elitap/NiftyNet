@@ -66,7 +66,7 @@ class SegmentationApplication(BaseApplication):
         if self.is_training:
             self.reader = ImageReader(SUPPORTED_TRAINING_INPUT)
         else:  # inference #TODO maybe make that check nicer
-            if self.action_param.inference_sampling is 'foreground':
+            if self.action_param.inference_sampling == 'foreground':
                 self.reader = ImageReader(SUPPORTED_INFERENCE_INPUT)
             else:
                 self.reader = ImageReader(SUPPORTED_INFERENCE_INPUT - {'foreground'})
@@ -246,12 +246,6 @@ class SegmentationApplication(BaseApplication):
             grads = self.optimiser.compute_gradients(loss)
             # collecting gradients variables
             gradients_collector.add_to_collection([grads])
-
-            for cnt, grad in enumerate(grads):
-                outputs_collector.add_to_collection(
-                    var=grad[0], name='layer_' + str(cnt) + "_gradients",
-                    average_over_devices=True, summary_type='histogram',
-                    collection=TF_SUMMARIES)
 
 
             # collecting output variables
