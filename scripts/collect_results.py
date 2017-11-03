@@ -5,7 +5,10 @@ import numpy as np
 import os
 import argparse
 
+#level2 is already full sized
 RESULT_DIR = "output/%d"
+#full sized result path for level1
+#RESULT_DIR = "output/%d/Test"
 GT_DIR = "Test%s/"
 GT_FILTER = "segmentation"
 ID_IDX = 9
@@ -25,10 +28,10 @@ MEASURES = ['dice']
 
 def getGroundTruth(model, result_file, gt_base_path):
     gt_postfix = ""
-    if "half" in model:
-        gt_postfix = "_2er"
-    if "quarter" in model:
-        gt_postfix = "_4er"
+    #if "half" in model:
+    #    gt_postfix = "_2er"
+    #if "quarter" in model:
+    #   gt_postfix = "_4er"
     id = result_file[:ID_IDX]
     gt_path = os.path.join(gt_base_path, GT_DIR) % gt_postfix
     for gt_file in os.listdir(gt_path):
@@ -66,24 +69,25 @@ def evaluate(gt_base_path, result_base_path, result_file):
     with open(result_file, 'w') as fileptr:
         for result_dir in os.listdir(result_base_path):
             full_result_dir = os.path.join(result_base_path, result_dir)
-            if ("1024s" in result_dir) and os.path.isdir(full_result_dir):
-                checkpoints = range(12000, 50000, 2000)
+            if ("1024s" in result_dir or "4024s" in result_dir) and os.path.isdir(full_result_dir):
+                checkpoints = range(12000, 218001, 2000)
                 checkpoints.append(49999)
                 for checkpoint in checkpoints:
                     checkpoint_dir = os.path.join(full_result_dir, RESULT_DIR) % checkpoint
-                    if os.path.exists(checkpoint_dir):
+                    if os.path.isdir(checkpoint_dir):
                         for result_file in os.listdir(checkpoint_dir):
                             full_result_file = os.path.join(checkpoint_dir, result_file)
                             full_gt_file = getGroundTruth(result_dir, result_file, gt_base_path)
-                            one_file_header, one_file_results = getMeasurements(full_result_file, full_gt_file, result_dir, checkpoint)
-                            if header is None:
-                                header = one_file_header
-                                fileptr.write(header + "\n")
-                                fileptr.flush()
-                            for result in one_file_results:
-                                fileptr.write(result + "\n")
-                                fileptr.flush()
-                            results.append(one_file_results)
+                            if full_gt_file is not None:
+                                one_file_header, one_file_results = getMeasurements(full_result_file, full_gt_file, result_dir, checkpoint)
+                                if header is None:
+                                    header = one_file_header
+                                    fileptr.write(header + "\n")
+                                    fileptr.flush()
+                                for result in one_file_results:
+                                    fileptr.write(result + "\n")
+                                    fileptr.flush()
+                                results.append(one_file_results)
 
                     else:
                         print "Checkpoint not found: ", checkpoint_dir

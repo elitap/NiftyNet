@@ -5,7 +5,7 @@ import sys
 import time
 
 CONFIG_BASE = "./config/tune_configs_2nd"
-LOGFILE = "tune_models/log/inferencelog_gpu%d.txt"
+LOGFILE = "tune_models_2nd/log/inferencelog_gpu%d.txt"
 
 INFERENCE_CMD = "python net_segment.py inference -c %s --border %s --save_seg_dir %s --inference_iter %d --cuda_devices %d"
 SAVE_DIR_BASE = "output"
@@ -30,15 +30,16 @@ def run_inference(configs, gpu):
 
     log = (LOGFILE) % gpu
     if not os.path.exists(log):
-        open(log, 'x')
+        open(log, 'w').close()
     with open(log, "a") as logptr:
         with open(configs, "r") as fptr:
             for config in fptr:
                 config = config.strip()
                 if (gpu == 0 and "24-24" in config) or (gpu == 1 and "48-8" in config):
                     border = "\"(8, 8, 8)\"" if ("48-8" in config or "24-24" in config) else "\"(16, 16, 16)\""
-                    checkpoints = range(12000, 50000, 2000)
-                    checkpoints.append(49999)
+                    checkpoints = range(144000, 218001, 2000)
+                    #checkpoints = range(12000, 50000, 2000)
+                    #checkpoints.append(49999)
                     full_config = os.path.join(CONFIG_BASE, config)
                     for checkpoint in checkpoints:
                         cmd = INFERENCE_CMD % (full_config, border, os.path.join(SAVE_DIR_BASE,str(checkpoint)), checkpoint, gpu)

@@ -15,9 +15,9 @@ def combineLabels(image_itk):
     new_image_itk.SetSpacing(image_itk.GetSpacing())
     #image_itk = sitk.BinaryThreshold(image_itk, 1 - 0.1, 9 + 0.1, 1, 0)
 
-    #castImage = sitk.CastImageFilter()
-    #castImage.SetOutputPixelType(sitk.sitkFloat32)
-    #image_itk = castImage.Execute(image_itk)
+    castImage = sitk.CastImageFilter()
+    castImage.SetOutputPixelType(sitk.sitkFloat32)
+    image_itk = castImage.Execute(image_itk)
     return new_image_itk
 
 
@@ -42,4 +42,5 @@ if __name__ == "__main__":
                         )
 
     args = parser.parse_args()
+
     generateForgroundMap(args.dir, args.filter)
