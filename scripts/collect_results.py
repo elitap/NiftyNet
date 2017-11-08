@@ -69,8 +69,9 @@ def evaluate(gt_base_path, result_base_path, result_file):
     with open(result_file, 'w') as fileptr:
         for result_dir in os.listdir(result_base_path):
             full_result_dir = os.path.join(result_base_path, result_dir)
-            if ("1024s" in result_dir or "4024s" in result_dir) and os.path.isdir(full_result_dir):
-                checkpoints = range(12000, 218001, 2000)
+            if ("4096s" in result_dir) and os.path.isdir(full_result_dir):
+            #if ("1024s" in result_dir or "4096s" in result_dir) and os.path.isdir(full_result_dir):
+                checkpoints = range(12000, 250001, 2000)
                 checkpoints.append(49999)
                 for checkpoint in checkpoints:
                     checkpoint_dir = os.path.join(full_result_dir, RESULT_DIR) % checkpoint

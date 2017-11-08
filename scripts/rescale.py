@@ -109,8 +109,8 @@ if __name__ == "__main__":
                         default='volume')
 
     args = parser.parse_args()
-    resampleAllModelsToOrigsize(args.path)
-    #resampleFolder(args.path, args.result, args.scale, args.volumefilter, args.origsize)
+    #resampleAllModelsToOrigsize(args.path)
+    resampleFolder(args.path, args.result, args.scale, args.volumefilter, args.origsize)
     #getOriginalMeasurements("/home/elias/Dokumente/head_neck_seg/NiftyNet/data/combined_challenge/Onsite","foreground")
 
 

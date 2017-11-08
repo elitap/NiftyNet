@@ -5,12 +5,12 @@ import matplotlib.pyplot as plt
 
 MODEL_BASE_PATH = "tune_models%s"
 
-BOXPLOT_FILE = "../"+MODEL_BASE_PATH+"/%s/output/bb_%s_orig_size.eps"
-LINEPLOT_FILE = "../"+MODEL_BASE_PATH+"%s/output/line_%s_orig_size.eps"
-COMBINED_LINEPLOT_FILE = "../"+MODEL_BASE_PATH+"/line_%d_orig_size.eps"
+BOXPLOT_FILE = "../"+MODEL_BASE_PATH+"/%s/output/bb_%s_orig_size.png"
+LINEPLOT_FILE = "../"+MODEL_BASE_PATH+"%s/output/line_%s_orig_size.png"
+COMBINED_LINEPLOT_FILE = "../"+MODEL_BASE_PATH+"/line_%d_orig_size.png"
 
-BOXPLOT_CHECKPOINT_FILE = "../"+MODEL_BASE_PATH+"/%s/output/%d/bb_%s_orig_size.eps"
-LINEPLOT_COMBINED = "combined_lineplot_orig_size.png"
+BOXPLOT_CHECKPOINT_FILE = "../"+MODEL_BASE_PATH+"/%s/output/%d/bb_%s_orig_size.png"
+LINEPLOT_COMBINED = "../"+MODEL_BASE_PATH+"/combined_lineplot_orig_size.png"
 
 def create_boxplots_organ_avg(result_file, stage):
     full_df = pd.read_csv(result_file)
@@ -46,18 +46,19 @@ def combined_lineplot(models, grouped_df, id, ax):
         df_to_plot.plot(style='.-', x='Checkpoint', y='Dice', ax=ax[id], label=model)
     ax[id].legend(loc='upper right', bbox_to_anchor=(0.95, 1.2), ncol=4)
 
-def create_lineplot_organ_samp_avg(result_file):
+def create_lineplot_organ_samp_avg(result_file, stage):
     full_df = pd.read_csv(result_file)
     grouped_df = full_df.groupby(['Model', 'Checkpoint'])['Dice'].mean() #mean over organs
     models = grouped_df.index.levels[0]
     model_index = range(0,25,12)
+    print model_index, models
 
     fig, ax = plt.subplots(nrows=2, ncols=1, figsize=(16, 9))
     fig.suptitle("grouped by checkpoint - file and organ based dice mean")
     for cnt in range(0, len(model_index)-1):
         combined_lineplot(models[model_index[cnt]:model_index[cnt+1]], grouped_df, cnt, ax)
 
-    fig.savefig(LINEPLOT_COMBINED, dpi=100)
+    fig.savefig((LINEPLOT_COMBINED % stage), dpi=100)
 
 def create_boxplot(result_file, model, checkpoint, stage):
     full_df = pd.read_csv(result_file)
@@ -83,5 +84,5 @@ if __name__ == "__main__":
     stage = "_2nd" if args.stage == 2 else ""
     #create_boxplots_organ_avg(args.result, stage)
     #create_lineplots(args.result)
-    #create_lineplot_organ_samp_avg(args.result)
-    create_boxplot(args.result, "half_e-3_48-8_dice_50k_1024s", 46000, stage)
+    #create_lineplot_organ_samp_avg(args.result, stage)
+    create_boxplot(args.result, "half_e-3_48-8_dice_50k_1024s", 49999, stage)
