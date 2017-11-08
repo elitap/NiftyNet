@@ -4,11 +4,15 @@ import os
 import sys
 import time
 
-CONFIG_BASE = "../config/tune_configs_2nd"
-LOGFILE = "../tune_models_2nd/log/inferencelog_gpu%d.txt"
+STAGE = "_2nd"
 
-INFERENCE_CMD = "python ../net_segment.py inference -c %s --border %s --save_seg_dir %s --inference_iter %d --cuda_devices %d"
+MODEL_BASE = "./tune_models"+STAGE+"/%s/models/model.ckpt-%d.index"
+CONFIG_BASE = "./config/tune_configs"+STAGE
+LOGFILE = "./tune_models"+STAGE+"/log/inferencelog_gpu%d.txt"
+
+INFERENCE_CMD = "python net_segment.py inference -c %s --border %s --save_seg_dir %s --inference_iter %d --cuda_devices %d"
 SAVE_DIR_BASE = "output"
+
 
 def execute(command):
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -26,31 +30,29 @@ def execute(command):
 
     return exitCode
 
-def touch(fname, times=None):
-    with open(fname, 'a'):
-        os.utime(fname, times)
 
 def run_inference(configs, gpu):
 
     log = (LOGFILE) % gpu
-    touch(log)
-    with open(log, 'a') as logptr:
+    with open(log, 'w') as logptr:
         with open(configs, "r") as fptr:
             for config in fptr:
                 config = config.strip()
-                if (gpu == 0 and "24-24" in config) or (gpu == 1 and "48-8" in config):
+                if (gpu == 0 and "4096s" in config) or (gpu == 1 and "1024s" in config):
                     border = "\"(8, 8, 8)\"" if ("48-8" in config or "24-24" in config) else "\"(16, 16, 16)\""
                     checkpoints = range(0, 250001, 2000)
                     #checkpoints = range(12000, 50000, 2000)
                     checkpoints.append(49999)
                     full_config = os.path.join(CONFIG_BASE, config)
                     for checkpoint in checkpoints:
-                        cmd = INFERENCE_CMD % (full_config, border, os.path.join(SAVE_DIR_BASE,str(checkpoint)), checkpoint, gpu)
-                        logptr.write("execute " + cmd + " \n")
-                        logptr.flush()
-                        start = time.time()
-                        execute(cmd)
-                        logptr.write("execution time %0.3f \n" % ((time.time()-start)*1000.0))
+                        checkpoint_path = MODEL_BASE % (os.path.splitext(config)[0], checkpoint)
+                        if os.path.exists(checkpoint_path):
+                            cmd = INFERENCE_CMD % (full_config, border, os.path.join(SAVE_DIR_BASE,str(checkpoint)), checkpoint, gpu)
+                            logptr.write("execute " + cmd + " \n")
+                            logptr.flush()
+                            start = time.time()
+                            execute(cmd)
+                            logptr.write("execution time %0.3f \n" % ((time.time()-start)*1000.0))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog='')
