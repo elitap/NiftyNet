@@ -3,7 +3,7 @@ import argparse
 import SimpleITK as sitk
 import numpy as np
 import os
-from original_sizes import ORIG_SIZE
+from defs import ORIG_SIZE
 
 
 VALID_FILES = [".mha", ".nrrd", ".mhd", ".nii", ".gz"]

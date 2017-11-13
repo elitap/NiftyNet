@@ -8,11 +8,14 @@ MODEL_BASE_PATH = "tune_models%s"
 BOXPLOT_FILE = "../"+MODEL_BASE_PATH+"/%s/output/bb_%s_orig_size.png"
 LINEPLOT_FILE = "../"+MODEL_BASE_PATH+"%s/output/line_%s_orig_size.png"
 COMBINED_LINEPLOT_FILE = "../"+MODEL_BASE_PATH+"/line_%d_orig_size.png"
-
-FILTERED_LINEPLOT_FILE = "../"+MODEL_BASE_PATH+"/%s.png"
-
+FILTERED_LINEPLOT_FILE = "../"+MODEL_BASE_PATH+"/figures/%s_%1.2f.png"
 BOXPLOT_CHECKPOINT_FILE = "../"+MODEL_BASE_PATH+"/%s/output/%d/bb_%s_orig_size.png"
 LINEPLOT_COMBINED = "../"+MODEL_BASE_PATH+"/combined_lineplot_orig_size.png"
+
+BIG_ORGANS = ["BrainStem", "Mandible", "Parotid_L", "Parotid_R"]
+SMALL_ORGANS = ["Chiasm", "OpticNerve_L", "OpticNerve_R"]
+
+
 
 def create_boxplots_organ_avg(result_file, stage):
     full_df = pd.read_csv(result_file)
@@ -43,24 +46,41 @@ def create_lineplots_organ_avg(result_file, stage):
         plt.close()
 
 
-def create_lineplot_organ_samp_avg_model_filtered(result_file, stage, filters, threshold=0.2):
+def create_lineplot_organ_samp_avg_model_filtered(result_file, stage, filters, threshold=0.4):
     full_df = pd.read_csv(result_file)
+
+    full_df_big_organs = full_df[full_df['Organ'].isin(BIG_ORGANS)]
+    full_df_small_organs = full_df[full_df['Organ'].isin(SMALL_ORGANS)]
+
+    grouped_df_big_organs = full_df_big_organs.groupby(['Model', 'Checkpoint'])['Dice'].mean()
+    grouped_df_small_organs = full_df_small_organs.groupby(['Model', 'Checkpoint'])['Dice'].mean()
+
     grouped_df = full_df.groupby(['Model', 'Checkpoint'])['Dice'].mean() #mean over organs
 
     grouped_df_to_thres = full_df.groupby(['Model'])['Dice'].mean()
     models = grouped_df_to_thres[grouped_df_to_thres > threshold].index.tolist()
 
-    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(16, 4))
-    ax.legend(loc='upper right', bbox_to_anchor=(0.95, 1.2), ncol=4)
+    fig, ax = plt.subplots(nrows=3, ncols=1, figsize=(16, 10))
+    #fig_split, ax_split = plt.subplots(nrows=2, ncols=1, figsize=(16, 9))
+    #ax.legend(loc='upper right', bbox_to_anchor=(0.95, 1.2), ncol=4)
     for model in models:
         if np.all([filter in model for filter in filters]):
-            df_to_plot = grouped_df[model].reset_index()
-            df_to_plot.plot(style='.-', x='Checkpoint', y='Dice', ax=ax, label=model)
-    fig.suptitle("sample and organ mean dice with average dice vals over %f" % threshold)
+            grouped_df[model].reset_index().plot(style='.-', x='Checkpoint', y='Dice', ax=ax[0],
+                                                 label=model, ylim=(0, 0.85))
+            grouped_df_big_organs[model].reset_index().plot(style='.-', x='Checkpoint', y='Dice', ax=ax[1],
+                                                            label=model+"_big_org", ylim=(0, 0.85))
+            grouped_df_small_organs[model].reset_index().plot(style='.-', x='Checkpoint', y='Dice', ax=ax[2],
+                                                            label=model + "_small_org", ylim=(0, 0.85))
 
-    filename = FILTERED_LINEPLOT_FILE % (stage, '-'.join(filters))
-    print filename
+    fig.suptitle("sample and organ mean dice with average dice val over %1.2f. Separated all/big/small organs" % threshold)
+    #fig_split.suptitle("sample and organ mean dice with average dice val over %1.2f. Separated small/big and all organs" % threshold)
+    ax[0].xaxis.label.set_visible(False)
+    ax[1].xaxis.label.set_visible(False)
+    filename = FILTERED_LINEPLOT_FILE % (stage, '-'.join(filters), threshold)
     fig.savefig(filename, dpi=100)
+    #filename = FILTERED_LINEPLOT_FILE % (stage, '-'.join(filters)+"big_small", threshold)
+    #fig.savefig(filename, dpi=100)
+
 
 
 def combined_lineplot(models, grouped_df, id, ax):
@@ -110,5 +130,5 @@ if __name__ == "__main__":
     #create_boxplots_organ_avg(result, stage)
     #create_lineplots(result)
     #create_lineplot_organ_samp_avg(result, stage)
-    create_lineplot_organ_samp_avg_model_filtered(result, stage, ['dice','96-1'])
+    create_lineplot_organ_samp_avg_model_filtered(result, stage, ['e-5'], threshold=0.2)
     #create_boxplot(result, "h_e-3_48-8_d_42k__full_e-3_24-24_dice_4096s", 222000, stage)

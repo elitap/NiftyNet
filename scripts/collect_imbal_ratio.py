@@ -2,185 +2,146 @@
 from __future__ import absolute_import, division, print_function
 
 import os
+import argparse
 
 import numpy as np
+import pandas
 import tensorflow as tf
+from numpy.core.operand_flag_tests import inplace_add
 
 from niftynet.engine.sampler_weighted import WeightedSampler
 from niftynet.engine.sampler_weighted import weighted_spatial_coordinates
 from niftynet.io.image_reader import ImageReader
 from tests.test_util import ParserNamespace
+from defs import LABELS
 
 
 IMBALENCE_RATIO_MODL = "./tune_models/imbal_ratio_model"
 
-DATA_PATH = "./data/combined_challenge/Train_4er"
-SPACING = (4.4, 4.4, 3.0)
-WINDOW_SIZE = (48, 48, 48)
+DATA_PATH = "./data/combined_challenge/%s%s"
+PATH_POSTFIX = {"full": "", "half": "_2er", "quarter": "_4er"}
+SPACING = {"full": (1.1, 1.1, 3.0), "half": (2.2, 2.2, 3.0), "quarter": (4.4, 4.4, 3.0)}
+WINDOW_SIZE = {"full": [(96, 96, 72)], "half": [(96, 96, 72), (48, 48, 48)], "quarter": [(48, 48, 48)]}
 AXCODES = ('A', 'R', 'S')
 SAMPLE_SIZE = 1024
 
-
-SEG_DATA = {
-    'segmentation': ParserNamespace(
-        csv_file=os.path.join(IMBALENCE_RATIO_MODL, 'segmentation.csv'),
-        path_to_search=DATA_PATH,
-        filename_contains=('segmentation',),
-        filename_not_contains=(),
-        interp_order=0,
-        pixdim=SPACING,
-        axcodes=AXCODES,
-        spatial_window_size=WINDOW_SIZE
-    ),
-    'sampler': ParserNamespace(
-        csv_file=os.path.join(IMBALENCE_RATIO_MODL, 'sampler.csv'),
-        path_to_search=DATA_PATH,
-        filename_contains=('foreground',),
-        filename_not_contains=(),
-        interp_order=0,
-        pixdim=SPACING,
-        axcodes=AXCODES,
-        spatial_window_size=WINDOW_SIZE
-    )
-}
-#TODO here find out what is needed
-SEG_TASK = ParserNamespace(sampler=('sampler',),
-                           label=('segmentation',))
+HEADER = "Dataset,Datasize,Windowsize,File,Sample," + ','.join([organ for organ in LABELS.keys()])
+DF_ROW = {name: '' for name in HEADER.split(',')}
 
 
-def get_3d_reader():
+def get_3d_reader(data_path, spacing, window_size):
+
+    SEG_DATA = {
+        'segmentation': ParserNamespace(
+            csv_file=os.path.join(IMBALENCE_RATIO_MODL, 'segmentation.csv'),
+            path_to_search=data_path,
+            filename_contains=('segmentation',),
+            filename_not_contains=(),
+            interp_order=0,
+            pixdim=spacing,
+            axcodes=AXCODES,
+            spatial_window_size=window_size
+        ),
+        'sampler': ParserNamespace(
+            csv_file=os.path.join(IMBALENCE_RATIO_MODL, 'sampler.csv'),
+            path_to_search=data_path,
+            filename_contains=('foreground',),
+            filename_not_contains=(),
+            interp_order=0,
+            pixdim=spacing,
+            axcodes=AXCODES,
+            spatial_window_size=window_size
+        )
+    }
+
+    SEG_TASK = ParserNamespace(sampler=('sampler',),
+                               label=('segmentation',))
+
     reader = ImageReader(['label', 'sampler'])
     reader.initialise_reader(SEG_DATA, SEG_TASK)
     return reader
 
 
-def bowoasnuit():
-    #TODO find out about what the samplter iterates: bs, queue, thresds
+def get_imbal_ratio(result_file, data_path, spacing, window_sizes):
 
-    #maybe reader has the mapping from subject id to image
-    sampler = WeightedSampler(reader=get_3d_reader(),
-                              data_param=SEG_DATA,
-                              batch_size=SAMPLE_SIZE,
-                              windows_per_image=SAMPLE_SIZE,
-                              queue_length=1)
+    if not os.path.exists(result_file):
+        with open(result_file, 'w') as fileptr:
+            fileptr.write(HEADER + '\n')
 
-    with tf.Session() as sess:
-        coordinator = tf.train.Coordinator()
-        sampler.run_threads(sess, coordinator, num_threads=1)
-        #TODO get link between subject id and image
-        #TODO calc imbalence ratio here!!
-        out = sess.run(sampler.pop_batch_op())
+    df = pandas.read_csv(result_file)
 
-    sampler.close_all()
+    for window_size in window_sizes:
+        reader = get_3d_reader(data_path, spacing, window_size)
+
+        DF_ROW['Windowsize'] = window_size[0]
+
+        while True:
+            image_id, data, _ = reader(idx=None, shuffle=False)
+            if not data:
+                break
+
+            DF_ROW['File'] = os.path.split(reader._file_list['segmentation'][image_id])[1][:9]
+
+            image_shapes = {name: data[name].shape for name in data.keys()}
+            static_window_shapes = {name: window_size for name in data.keys()}
+
+            # find random coordinates based on window and image shapes
+            coordinates = weighted_spatial_coordinates(
+                image_id,
+                data,
+                image_shapes,
+                static_window_shapes,
+                SAMPLE_SIZE)
+
+            label_coords = coordinates['label']
+            ratio_sum = 0
+            for window_id in range(0, SAMPLE_SIZE):
+                x_start, y_start, z_start, x_end, y_end, z_end = label_coords[window_id, 1:]
+                image_window = data['label'][x_start:x_end, y_start:y_end, z_start:z_end, ...]
+                unique, cnt = np.unique(image_window.flatten(), return_counts=True)
+
+                DF_ROW['Sample'] = window_id
+                background_idx = np.where(unique == 0)
+                background_cnt = cnt[background_idx][0] if np.size(background_idx) > 0 else 0.0
+                for organ, id in LABELS.iteritems():
+                    organ_idx = np.where(unique == id)
+                    organ_cnt = cnt[organ_idx][0] if np.size(organ_idx) > 0 else 0.0
+                    ratio = organ_cnt/background_cnt if background_cnt != 0.0 else 1.0
+                    DF_ROW[organ] = ratio
+                    ratio_sum += ratio
+
+                df = df.append(DF_ROW, ignore_index=True)
+            print(DF_ROW['File'], window_size, spacing, "average window ratio", ratio_sum/SAMPLE_SIZE)
 
 
-
-class RandomCoordinatesTest(tf.test.TestCase):
-    def test_coodinates(self):
-        coords = weighted_spatial_coordinates(
-            subject_id=1,
-            data={'sampler': np.random.rand(41, 42, 42, 1, 1)},
-            img_sizes={'image': (42, 42, 42, 1, 2),
-                       'label': (42, 42, 42, 1, 1)},
-            win_sizes={'image': (23, 23, 40),
-                       'label': (40, 32, 33)},
-            n_samples=10)
-        self.assertEquals(np.all(coords['image'][:0] == 1), True)
-        self.assertEquals(coords['image'].shape, (10, 7))
-        self.assertEquals(coords['label'].shape, (10, 7))
-        self.assertAllClose(
-            (coords['image'][:, 4] + coords['image'][:, 1]),
-            (coords['label'][:, 4] + coords['label'][:, 1]), atol=1.0)
-        self.assertAllClose(
-            (coords['image'][:, 5] + coords['image'][:, 2]),
-            (coords['label'][:, 5] + coords['label'][:, 2]), atol=1.0)
-        self.assertAllClose(
-            (coords['image'][:, 6] + coords['image'][:, 3]),
-            (coords['label'][:, 6] + coords['label'][:, 3]), atol=1.0)
-
-    def test_25D_coodinates(self):
-        coords = weighted_spatial_coordinates(
-            subject_id=1,
-            data={'sampler': np.random.rand(42, 42, 42, 1, 1)},
-            img_sizes={'image': (42, 42, 42, 1, 1),
-                       'label': (42, 42, 42, 1, 1)},
-            win_sizes={'image': (23, 23, 1),
-                       'label': (40, 32, 1)},
-            n_samples=10)
-        self.assertEquals(np.all(coords['image'][:0] == 1), True)
-        self.assertEquals(coords['image'].shape, (10, 7))
-        self.assertEquals(coords['label'].shape, (10, 7))
-        self.assertAllClose(
-            (coords['image'][:, 4] + coords['image'][:, 1]),
-            (coords['label'][:, 4] + coords['label'][:, 1]), atol=1.0)
-        self.assertAllClose(
-            (coords['image'][:, 5] + coords['image'][:, 2]),
-            (coords['label'][:, 5] + coords['label'][:, 2]), atol=1.0)
-        self.assertAllClose(
-            (coords['image'][:, 6] + coords['image'][:, 3]),
-            (coords['label'][:, 6] + coords['label'][:, 3]), atol=1.0)
-
-    def test_2D_coodinates(self):
-        coords = weighted_spatial_coordinates(
-            subject_id=1,
-            data={'sampler': np.random.rand(42, 42, 42, 1, 1)},
-            img_sizes={'image': (42, 42, 1, 1, 1),
-                       'label': (42, 42, 1, 1, 1)},
-            win_sizes={'image': (23, 23, 1),
-                       'label': (40, 32, 1)},
-            n_samples=10)
-        self.assertEquals(np.all(coords['image'][:0] == 1), True)
-        self.assertEquals(coords['image'].shape, (10, 7))
-        self.assertEquals(coords['label'].shape, (10, 7))
-        self.assertAllClose(
-            (coords['image'][:, 4] + coords['image'][:, 1]),
-            (coords['label'][:, 4] + coords['label'][:, 1]), atol=1.0)
-        self.assertAllClose(
-            (coords['image'][:, 5] + coords['image'][:, 2]),
-            (coords['label'][:, 5] + coords['label'][:, 2]), atol=1.0)
-        self.assertAllClose(
-            (coords['image'][:, 6] + coords['image'][:, 3]),
-            (coords['label'][:, 6] + coords['label'][:, 3]), atol=1.0)
-
-    def test_ill_coodinates(self):
-        with self.assertRaisesRegexp(IndexError, ""):
-            coords = weighted_spatial_coordinates(
-                subject_id=1,
-                data={'sampler': np.random.rand(42, 42, 42)},
-                img_sizes={'image': (42, 42, 1, 1, 1),
-                           'label': (42, 42, 1, 1, 1)},
-                win_sizes={'image': (23, 23),
-                           'label': (40, 32)},
-                n_samples=10)
-
-        with self.assertRaisesRegexp(TypeError, ""):
-            coords = weighted_spatial_coordinates(
-                subject_id=1,
-                data={'sampler': np.random.rand(42, 42, 42, 1, 1)},
-                img_sizes={'image': (42, 42, 1, 1, 1),
-                           'label': (42, 42, 1, 1, 1)},
-                win_sizes={'image': (23, 23, 1),
-                           'label': (40, 32, 1)},
-                n_samples='test')
-
-        with self.assertRaisesRegexp(AssertionError, ""):
-            coords = weighted_spatial_coordinates(
-                subject_id=1,
-                data={'sampler': np.random.rand(42, 42, 42, 1, 1)},
-                img_sizes={'label': (42, 1, 1, 1)},
-                win_sizes={'image': (23, 23, 1)},
-                n_samples=0)
-
-        with self.assertRaisesRegexp(RuntimeError, ""):
-            coords = weighted_spatial_coordinates(
-                subject_id=1,
-                data={},
-                img_sizes={'image': (42, 42, 1, 1, 1),
-                           'label': (42, 42, 1, 1, 1)},
-                win_sizes={'image': (23, 23, 1),
-                           'label': (40, 32, 1)},
-                n_samples=10)
+    df.to_csv(result_file, index=False)
 
 
 if __name__ == "__main__":
-    bowoasnuit()
+    parser = argparse.ArgumentParser(prog='')
+
+    parser.add_argument('--resfile',
+                        required=True
+                        )
+    parser.add_argument('--size',
+                        choices=['full', 'half', 'quarter'],
+                        default='full'
+                        )
+    parser.add_argument('--dataset',
+                        choices=['Train', 'Test', 'Onsite'],
+                        default='Train'
+                        )
+
+    args = parser.parse_args()
+    data_path = DATA_PATH % (args.dataset, PATH_POSTFIX[args.size])
+
+    spacing = SPACING[args.size]
+    window_sizes = WINDOW_SIZE[args.size]
+
+    DF_ROW['Dataset'] = args.dataset
+    DF_ROW['Datasize'] = args.size
+
+    split_res_file = os.path.splitext(args.resfile)
+    resultfile = split_res_file[0] + "_" + args.size + ".csv"
+
+    get_imbal_ratio(resultfile, data_path, spacing, window_sizes)
