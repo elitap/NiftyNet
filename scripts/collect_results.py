@@ -6,7 +6,7 @@ import os
 import argparse
 
 #level2 is already full sized
-RESULT_DIR = "output/%d"
+RESULT_DIR = "output/%d/Test"
 #full sized result path for level1
 #RESULT_DIR = "output/%d/Test"
 GT_DIR = "Test%s/"
@@ -69,10 +69,10 @@ def evaluate(gt_base_path, result_base_path, result_file):
     with open(result_file, 'w') as fileptr:
         for result_dir in os.listdir(result_base_path):
             full_result_dir = os.path.join(result_base_path, result_dir)
-            if ("48-8" in result_dir) and os.path.isdir(full_result_dir):
+            if ("half_e-4_48-8_dice_50k_1024s" in result_dir) and os.path.isdir(full_result_dir):
             #if ("1024s" in result_dir or "4096s" in result_dir) and os.path.isdir(full_result_dir):
-                checkpoints = range(12000, 250001, 2000)
-                checkpoints.append(49999)
+                checkpoints = range(50000, 250000, 2000)
+                checkpoints.append(249999)
                 for checkpoint in checkpoints:
                     checkpoint_dir = os.path.join(full_result_dir, RESULT_DIR) % checkpoint
                     if os.path.isdir(checkpoint_dir):

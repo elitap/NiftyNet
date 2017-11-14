@@ -9,7 +9,7 @@ from defs import ORIG_SIZE
 VALID_FILES = [".mha", ".nrrd", ".mhd", ".nii", ".gz"]
 
 RESULTDIR = "output/%d"
-ORIG_SIZE_SUBDIR = "Test"
+ORIG_SIZE_SUBDIR = "Train"
 
 
 def resample(infile, outfile, spacingScale, interpolationtype, origsize):
@@ -77,9 +77,9 @@ def getOriginalMeasurements(path, filter):
 def resampleAllModelsToOrigsize(model_dir):
     for model in os.listdir(model_dir):
         full_result_dir = os.path.join(model_dir, model)
-        if ("1024s" in model) and os.path.isdir(full_result_dir):
-            checkpoints = range(12000, 50000, 2000)
-            checkpoints.append(49999)
+        if ("half_e-4_48-8_dice_50k_1024s.ini" in model) and os.path.isdir(full_result_dir):
+            checkpoints = range(50000, 250000, 2000)
+            checkpoints.append(249999)
             for checkpoint in checkpoints:
                 checkpoint_dir = os.path.join(full_result_dir, RESULTDIR) % checkpoint
                 if os.path.exists(checkpoint_dir):
