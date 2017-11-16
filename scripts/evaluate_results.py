@@ -68,18 +68,15 @@ def create_lineplot_organ_samp_avg_model_filtered(result_file, stage, filters, t
             grouped_df[model].reset_index().plot(style='.-', x='Checkpoint', y='Dice', ax=ax[0],
                                                  label=model, ylim=(0, 0.85))
             grouped_df_big_organs[model].reset_index().plot(style='.-', x='Checkpoint', y='Dice', ax=ax[1],
-                                                            label=model+"_big_org", ylim=(0, 0.85))
+                                                            label=model+"_big_org", ylim=(0, 0.9))
             grouped_df_small_organs[model].reset_index().plot(style='.-', x='Checkpoint', y='Dice', ax=ax[2],
-                                                            label=model + "_small_org", ylim=(0, 0.85))
+                                                            label=model + "_small_org", ylim=(0, 0.9))
 
     fig.suptitle("sample and organ mean dice with average dice val over %1.2f. Separated all/big/small organs" % threshold)
-    #fig_split.suptitle("sample and organ mean dice with average dice val over %1.2f. Separated small/big and all organs" % threshold)
     ax[0].xaxis.label.set_visible(False)
     ax[1].xaxis.label.set_visible(False)
     filename = FILTERED_LINEPLOT_FILE % (stage, '-'.join(filters), threshold)
     fig.savefig(filename, dpi=100)
-    #filename = FILTERED_LINEPLOT_FILE % (stage, '-'.join(filters)+"big_small", threshold)
-    #fig.savefig(filename, dpi=100)
 
 
 
@@ -130,5 +127,5 @@ if __name__ == "__main__":
     #create_boxplots_organ_avg(result, stage)
     #create_lineplots(result)
     #create_lineplot_organ_samp_avg(result, stage)
-    create_lineplot_organ_samp_avg_model_filtered(result, stage, ['e-5'], threshold=0.2)
+    create_lineplot_organ_samp_avg_model_filtered(result, stage, ['dice'], threshold=0.2)
     #create_boxplot(result, "h_e-3_48-8_d_42k__full_e-3_24-24_dice_4096s", 222000, stage)

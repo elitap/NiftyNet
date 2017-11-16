@@ -1,5 +1,6 @@
 import argparse
 import pandas
+import os
 import matplotlib.pyplot as plt
 
 from defs import LABELS
@@ -33,35 +34,48 @@ def plot_all_means(resfile, test_train_filter=[]):
 
     all_organs = [name for name in LABELS.keys()]
 
-    fig, ax = plt.subplots(nrows=1, ncols=4, figsize=(16, 9))
+    fig, ax = plt.subplots(nrows=1, ncols=4, figsize=(18, 8))
     ax_cnt = 0
 
     samples = df['Sample'].max() + 1
 
     for dataset_size in ['full', 'half', 'quarter']:
-        df = df[df['Dataset'].isin([dataset_size])]
-        window_sizes = [96,48]
+        df_filtered_size = df[df['Datasize'].isin([dataset_size])]
+        window_sizes = [96, 48]
         if dataset_size == 'full':
-            window_sizes == [96]
+            window_sizes = [96]
         if dataset_size == 'quarter':
-            window_sizes == [48]
+            window_sizes = [48]
         for window_size in window_sizes:
-            df = df[df['Windowsize'].isin(window_sizes)]
+            df_filtered_window = df_filtered_size[df_filtered_size['Windowsize'].isin([window_size])]
 
-            df['Total'] = df[all_organs].sum(axis=1)
-            df.drop(all_organs, axis=1, inplace=True)
+            dataname = dataset_size + "_" + str(window_size)
+            df_filtered_window[dataname] = df_filtered_window[all_organs].sum(axis=1)
+            df_filtered_window.drop(all_organs, axis=1, inplace=True)
 
+            ax[ax_cnt].set_ylim([0, 0.0175])
+
+            grouped_df = df_filtered_window.groupby(['File'])[dataname].mean()
+            grouped_df.reset_index().boxplot([dataname], ax=ax[ax_cnt])
             ax_cnt += 1
-            grouped_df = df.groupby(['File'])['Total'].mean()
-            labelname = dataset_size+"_"+str(window_size)
-            grouped_df.reset_index().boxplot(['Total'], by='File', ax=ax[ax_cnt])
 
-    plt.title("imbalence ratio, mean over %d sample windows" % samples)
+    sampling_method = getSamplingMethod(resfile)
 
-    filename = PLOT_FILE % ('-'.join(test_train_filter)+"_"+str(samples))
+    fig.suptitle("imbalence ratio, mean over %d sampled %s windows" % (samples, sampling_method))
+
+    filename = PLOT_FILE % ('-'.join(test_train_filter)+"_"+str(samples)+"_"+sampling_method)
     print filename
-    plt.savefig(filename, dpi=100)
-    plt.close()
+    fig.savefig(filename, dpi=75)
+
+
+def getSamplingMethod(resfile):
+    sampling_method = ''
+    resfilename = os.path.split(resfile)[1]
+    if 'uniform' in resfilename:
+        sampling_method = 'uniform'
+    if 'weighted' in resfilename:
+        sampling_method = 'weighted'
+    return sampling_method
 
 
 if __name__ == "__main__":
