@@ -127,5 +127,5 @@ if __name__ == "__main__":
     #create_boxplots_organ_avg(result, stage)
     #create_lineplots(result)
     #create_lineplot_organ_samp_avg(result, stage)
-    create_lineplot_organ_samp_avg_model_filtered(result, stage, ['dice'], threshold=0.2)
+    create_lineplot_organ_samp_avg_model_filtered(result, stage, ['dice'], threshold=0.5)
     #create_boxplot(result, "h_e-3_48-8_d_42k__full_e-3_24-24_dice_4096s", 222000, stage)

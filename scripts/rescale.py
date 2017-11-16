@@ -22,7 +22,7 @@ def resample(infile, outfile, spacingScale, interpolationtype, origsize):
         newSpacing = ORIG_SIZE[id][1]
     else:
         newSpacing = np.array(itk_img.GetSpacing()) * spacingScale
-        newSpacing = np.floor(newSpacing * 10)/10
+        #newSpacing = np.floor(newSpacing * 10)/10
         imagescale = np.array(itk_img.GetSpacing()) / newSpacing
 
         newSize = np.array(itk_img.GetSize()) * imagescale
@@ -50,6 +50,8 @@ def resample(infile, outfile, spacingScale, interpolationtype, origsize):
     print infile, spacingScale, resampled_img.GetSpacing(), resampled_img.GetSize(), itk_img.GetSize(), unique, len(unique)
 
     sitk.WriteImage(resampled_img, outfile)
+
+
 
 
 def resampleFolder(inpath, outpath, scale=2, volfilter="volume", origsize=True):
@@ -109,8 +111,8 @@ if __name__ == "__main__":
                         default='volume')
 
     args = parser.parse_args()
-    resampleAllModelsToOrigsize(args.path)
-    #resampleFolder(args.path, args.result, args.scale, args.volumefilter, args.origsize)
+    #resampleAllModelsToOrigsize(args.path)
+    resampleFolder(args.path, args.result, args.scale, args.volumefilter, args.origsize)
     #getOriginalMeasurements("/home/elias/Dokumente/head_neck_seg/NiftyNet/data/combined_challenge/Onsite","foreground")
 
 
