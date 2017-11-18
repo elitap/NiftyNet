@@ -35,7 +35,7 @@ def run_train(configs, gpu, filter_gpu0=[], filter_gpu1=[]):
         with open(configs, "r") as fptr:
             for config in fptr:
                 config = config.strip()
-                if config[0] == '#' or len(config) == 0:
+                if len(config) == 0 or config[0] == '#':
                     continue
                 if (gpu == 0 and np.all([myfilter in config for myfilter in filter_gpu0])) or (gpu == 1 and np.all([myfilter in config for myfilter in filter_gpu1])):
 
