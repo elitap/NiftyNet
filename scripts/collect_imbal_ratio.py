@@ -24,7 +24,7 @@ PATH_POSTFIX = {"full": "", "half": "_2er", "quarter": "_4er"}
 SPACING = {"full": (1.1, 1.1, 3.0), "half": (2.2, 2.2, 3.0), "quarter": (4.4, 4.4, 3.0)}
 WINDOW_SIZE = {"full": [(96, 96, 72)], "half": [(96, 96, 72), (48, 48, 48)], "quarter": [(48, 48, 48)]}
 AXCODES = ('A', 'R', 'S')
-SAMPLE_SIZE = 128
+SAMPLE_SIZE = 2048
 
 HEADER = "Dataset,Datasize,Windowsize,File,Sample," + ','.join([organ for organ in LABELS.keys()])
 DF_ROW = {name: '' for name in HEADER.split(',')}

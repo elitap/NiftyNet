@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from defs import LABELS
 
 PLOT_FILE = "../tune_models/figures/imbal_rat_%s.png"
+SAMPLING_METHODS = ['weighted', 'uniform']
 
 def plot_imbal_statistics(resfile, organ_filter=[], window_size_filter=[], dataset_size_filter=[], test_train_filter=[]):
 
@@ -29,41 +30,44 @@ def plot_imbal_statistics(resfile, organ_filter=[], window_size_filter=[], datas
 
 def plot_all_means(resfile, test_train_filter=[]):
 
-    df = pandas.read_csv(resfile)
-    df = df[df['Dataset'].isin(test_train_filter)]
-
+    fig, ax = plt.subplots(nrows=2, ncols=4, figsize=(16, 10))
     all_organs = [name for name in LABELS.keys()]
+    sampling_cnt = 0
 
-    fig, ax = plt.subplots(nrows=1, ncols=4, figsize=(18, 8))
-    ax_cnt = 0
+    for sampling in SAMPLING_METHODS:
+        loadable_resfile = resfile % (sampling)
 
-    samples = df['Sample'].max() + 1
 
-    for dataset_size in ['full', 'half', 'quarter']:
-        df_filtered_size = df[df['Datasize'].isin([dataset_size])]
-        window_sizes = [96, 48]
-        if dataset_size == 'full':
-            window_sizes = [96]
-        if dataset_size == 'quarter':
-            window_sizes = [48]
-        for window_size in window_sizes:
-            df_filtered_window = df_filtered_size[df_filtered_size['Windowsize'].isin([window_size])]
+        df = pandas.read_csv(loadable_resfile)
+        df = df[df['Dataset'].isin(test_train_filter)]
+        ax_cnt = 0
 
-            dataname = dataset_size + "_" + str(window_size)
-            df_filtered_window[dataname] = df_filtered_window[all_organs].sum(axis=1)
-            df_filtered_window.drop(all_organs, axis=1, inplace=True)
+        samples = df['Sample'].max() + 1
 
-            ax[ax_cnt].set_ylim([0, 0.0175])
+        for dataset_size in ['full', 'half', 'quarter']:
+            df_filtered_size = df[df['Datasize'].isin([dataset_size])]
+            window_sizes = [96, 48]
+            if dataset_size == 'full':
+                window_sizes = [96]
+            if dataset_size == 'quarter':
+                window_sizes = [48]
+            for window_size in window_sizes:
+                df_filtered_window = df_filtered_size[df_filtered_size['Windowsize'].isin([window_size])]
 
-            grouped_df = df_filtered_window.groupby(['File'])[dataname].mean()
-            grouped_df.reset_index().boxplot([dataname], ax=ax[ax_cnt])
-            ax_cnt += 1
+                dataname = dataset_size + "_" + str(window_size) + "_" + sampling
+                df_filtered_window[dataname] = df_filtered_window[all_organs].sum(axis=1)
+                df_filtered_window.drop(all_organs, axis=1, inplace=True)
 
-    sampling_method = getSamplingMethod(resfile)
+                ax[sampling_cnt, ax_cnt].set_ylim([0, 0.025])
 
-    fig.suptitle("imbalence ratio, mean over %d sampled %s windows" % (samples, sampling_method))
+                grouped_df = df_filtered_window.groupby(['File'])[dataname].mean()
+                grouped_df.reset_index().boxplot([dataname], ax=ax[sampling_cnt, ax_cnt])
+                ax_cnt += 1
+        sampling_cnt += 1
 
-    filename = PLOT_FILE % ('-'.join(test_train_filter)+"_"+str(samples)+"_"+sampling_method)
+    fig.suptitle("imbalence ratio, mean over %d samples" % (samples))
+
+    filename = PLOT_FILE % ('-'.join(test_train_filter)+"_"+str(samples))
     print filename
     fig.savefig(filename, dpi=75)
 

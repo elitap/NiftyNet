@@ -24,7 +24,19 @@ def getForeground(image_itk):
     assert foreground_percentage > 0.05, "less then 5 percent of the pixels were declared as foreground"
     assert foreground_percentage < 0.5, "more then 50 percent of the pixels are declared as foreground"
 
+    # this line caused problems if the order was the other way around!! why??
+    connected_np[connected_np != largest_component] = 0
+    connected_np[connected_np == largest_component] = 1
 
+    uniq, count = np.unique(connected_np.flatten(), return_counts=True)
+    print "uniq count after thresholding: ", uniq[:4], count[:4]
+
+    connected_itk = sitk.GetImageFromArray(connected_np)
+    connected_itk.SetSpacing(image_itk.GetSpacing())
+    connected_itk.SetOrigin(image_itk.GetOrigin())
+    connected_itk.SetDirection(image_itk.GetDirection())
+
+    # connected_itk = sitk.BinaryThreshold(connected_itk, largest_component - 0.1, largest_component + 0.1) <- this line!!!!
 
     castImage = sitk.CastImageFilter()
     castImage.SetOutputPixelType(sitk.sitkFloat32)
