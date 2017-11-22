@@ -119,10 +119,10 @@ def weighted_spatial_coordinates(subject_id,
     # get the sorting indexes to that we can invert the sorting later on.
 
     sorted_indexes = np.argsort(flatten_map)
-    unique = np.unique(flatten_map)
-    for val in unique:
-        permuted_submap = np.random.permutation(sorted_indexes[sorted_map == val])
-        sorted_indexes[sorted_map == val] = permuted_submap
+    #unique = np.unique(flatten_map)
+    #for val in unique:
+    #    permuted_submap = np.random.permutation(sorted_indexes[sorted_map == val])
+    #    sorted_indexes[sorted_map == val] = permuted_submap
 
     #import matplotlib.pyplot as plt
     #plt.plot(sorted_indexes_shuffle, color='lightblue', linestyle='-', markersize=0.1, label="shuffled sorted indices")
