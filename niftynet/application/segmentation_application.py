@@ -29,7 +29,7 @@ from niftynet.layer.rand_spatial_scaling import RandomSpatialScalingLayer
 SUPPORTED_TRAINING_INPUT = {'image', 'label', 'weight', 'sampler'}
 SUPPORTED_INFERENCE_INPUT = {'image'}
 FOREGROUND_SAMPLER = {'foreground'}
-SUPPORTED_INPUT = SUPPORTED_INFERENCE_INPUT | SUPPORTED_TRAINING_INPUT
+SUPPORTED_INPUT = SUPPORTED_INFERENCE_INPUT | SUPPORTED_TRAINING_INPUT | FOREGROUND_SAMPLER
 
 
 class SegmentationApplication(BaseApplication):
@@ -75,7 +75,7 @@ class SegmentationApplication(BaseApplication):
             self.readers = []
             for file_list in file_lists:
                 input_types = SUPPORTED_TRAINING_INPUT
-                if self.action_param.inference_sampling == FOREGROUND_SAMPLER:
+                if self.net_param.inference_sampling == FOREGROUND_SAMPLER:
                     input_types += FOREGROUND_SAMPLER
                 reader = ImageReader(input_types)
                 reader.initialise(data_param, task_param, file_list)
@@ -83,7 +83,7 @@ class SegmentationApplication(BaseApplication):
 
         else:  # in the inference process use image input only
             input_types = SUPPORTED_INFERENCE_INPUT
-            if self.action_param.inference_sampling == FOREGROUND_SAMPLER:
+            if self.net_param.inference_sampling == FOREGROUND_SAMPLER:
                 input_types += FOREGROUND_SAMPLER
             inference_reader = ImageReader(input_types)
             file_list = data_partitioner.inference_files

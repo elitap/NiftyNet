@@ -76,16 +76,6 @@ def add_inference_args(parser):
         default=-1)
 
     parser.add_argument(
-        "--inference_sampling",
-        metavar='TYPE_STR',
-        help="How to sample patches from each loaded image:"
-             " 'grid': samples the whole input in a grid based manner,"
-             " 'resize': requires the grid to contain foreground, as defined in "
-             "           the foreground mod, unseen parts of the input are set to zero.",
-        choices=['grid', 'foreground'],
-        default='grid')
-
-    parser.add_argument(
         "--save_seg_dir",
         metavar='',
         help="[Inference only] Prediction directory name",  # without '/'
@@ -214,6 +204,16 @@ def add_network_args(parser):
              " 'resize': resize image to the patch size.",
         choices=['uniform', 'resize'],
         default='uniform')
+
+    parser.add_argument(
+        "--inference_sampling",
+        metavar='TYPE_STR',
+        help="How to sample patches from each loaded image:"
+             " 'grid': samples the whole input in a grid based manner,"
+             " 'resize': requires the grid to contain foreground, as defined in "
+             "           the foreground mod, unseen parts of the input are set to zero.",
+        choices=['grid', 'foreground'],
+        default='grid')
 
     parser.add_argument(
         "--queue_length",
