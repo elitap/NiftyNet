@@ -5,10 +5,11 @@ import sys
 import numpy as np
 
 STAGE = ""
+DATASET_SPLIT_FILE = "./data/combined_challenge/test_data_split.csv"
 CONFIGS = "./config/tune_configs"
 LOGFILE = "./tune_models"+STAGE+"/log/tune_log_gpu%d.txt"
 
-TRAIN_CMD = "python net_segment.py train -c %s --cuda_devices %d"
+TRAIN_CMD = "python net_segment.py train -c %s --cuda_devices %d --dataset_split_file %s"
 
 
 def execute(command):
@@ -40,7 +41,7 @@ def run_train(configs, gpu, filter_gpu0=[], filter_gpu1=[]):
                 if (gpu == 0 and np.all([myfilter in config for myfilter in filter_gpu0])) or (gpu == 1 and np.all([myfilter in config for myfilter in filter_gpu1])):
 
                     full_configfile = os.path.join(CONFIGS, config)
-                    cmd = TRAIN_CMD % (full_configfile, gpu)
+                    cmd = TRAIN_CMD % (full_configfile, gpu, os.path.abspath(DATASET_SPLIT_FILE))
 
                     logptr.write("execute: " + cmd + "\n")
                     logptr.flush()

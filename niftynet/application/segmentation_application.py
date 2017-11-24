@@ -26,10 +26,10 @@ from niftynet.layer.rand_flip import RandomFlipLayer
 from niftynet.layer.rand_rotation import RandomRotationLayer
 from niftynet.layer.rand_spatial_scaling import RandomSpatialScalingLayer
 
-SUPPORTED_TRAINING_INPUT = {'image', 'label', 'weight', 'sampler'}
-SUPPORTED_INFERENCE_INPUT = {'image'}
-FOREGROUND_SAMPLER = {'foreground'}
-SUPPORTED_INPUT = SUPPORTED_INFERENCE_INPUT | SUPPORTED_TRAINING_INPUT | FOREGROUND_SAMPLER
+TRAINING_INPUT = {'image', 'label', 'weight', 'sampler'}
+FOREGROUND_INFERENCE_INPUT = {'image', 'foreground'}
+INFERENCE_INPUT = {'image'}
+SUPPORTED_INPUT = FOREGROUND_INFERENCE_INPUT | TRAINING_INPUT
 
 
 class SegmentationApplication(BaseApplication):
@@ -74,17 +74,17 @@ class SegmentationApplication(BaseApplication):
 
             self.readers = []
             for file_list in file_lists:
-                input_types = SUPPORTED_TRAINING_INPUT
-                if self.net_param.inference_sampling == FOREGROUND_SAMPLER:
-                    input_types += FOREGROUND_SAMPLER
+                input_types = TRAINING_INPUT
+                if self.net_param.inference_sampling in FOREGROUND_INFERENCE_INPUT:
+                    input_types = input_types.union(FOREGROUND_INFERENCE_INPUT)
                 reader = ImageReader(input_types)
                 reader.initialise(data_param, task_param, file_list)
                 self.readers.append(reader)
 
         else:  # in the inference process use image input only
-            input_types = SUPPORTED_INFERENCE_INPUT
-            if self.net_param.inference_sampling == FOREGROUND_SAMPLER:
-                input_types += FOREGROUND_SAMPLER
+            input_types = INFERENCE_INPUT
+            if self.net_param.inference_sampling in FOREGROUND_INFERENCE_INPUT:
+                input_types = input_types.union(FOREGROUND_INFERENCE_INPUT)
             inference_reader = ImageReader(input_types)
             file_list = data_partitioner.inference_files
             inference_reader.initialise(data_param, task_param, file_list)
@@ -195,7 +195,8 @@ class SegmentationApplication(BaseApplication):
             batch_size=self.net_param.batch_size,
             spatial_window_size=self.action_param.spatial_window_size,
             window_border=self.action_param.border,
-            queue_length=self.net_param.queue_length) for reader in
+            queue_length=self.net_param.queue_length,
+            foreground_name='foreground') for reader in
             self.readers]]
 
     def initialise_grid_aggregator(self):

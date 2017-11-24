@@ -122,13 +122,18 @@ class UniformSampler(Layer, InputBatchQueueRunner):
                 if "label:0" in tensor.name:
                     windows_per_volume = int(output_dict[tensor].shape[0])
                     label_inside_cnt = 0
+                    ratio_sum = 0
                     for i in range(windows_per_volume):
                         unique, cnt = np.unique(output_dict[tensor][i], return_counts=True)
-                        if len(unique) > 1:
+                        background_idx = np.where(unique == 0)
+                        background_cnt = cnt[background_idx][0] if np.size(background_idx) > 0 else 0.0
+                        foreground_cnt = sum(cnt[unique != 0])
+                        if foreground_cnt > 0:
                             label_inside_cnt += 1
-                            print("Label detected, foreground background ratio is: ", sum(cnt[1:]) / cnt[0])
-                    print(windows_per_volume, " windows sampled, ", label_inside_cnt, " contain label info")
-
+                        ratio = foreground_cnt / background_cnt if background_cnt != 0.0 else 1.0
+                        #print(ratio)
+                        ratio_sum += ratio
+                    print(windows_per_volume, " windows sampled, ", label_inside_cnt, " contain label info, average sampling ratio ", ratio_sum/windows_per_volume)
 
             yield output_dict
 

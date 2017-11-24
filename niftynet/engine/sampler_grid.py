@@ -138,7 +138,7 @@ class GridSampler(Layer, InputBatchQueueRunner):
         coordinates_key = self.window.names[0]
         new_coordinates = dict()
         forground_coordinate_cnt = 0
-        # iterate over all coordinates
+        # iterate over all grid coordinates
         for i in range(list(coordinates.values())[0].shape[0]):
             x_start, y_start, z_start, x_end, y_end, z_end = coordinates[coordinates_key][i, 1:]
             foreground_window = data[self.foreground_name][x_start:x_end, y_start:y_end, z_start:z_end, ...]
@@ -154,7 +154,7 @@ class GridSampler(Layer, InputBatchQueueRunner):
         # cast to nparray
         for name in self.window.names:
             new_coordinates[name] = np.array(new_coordinates[name])
-        tf.logging.info('%d locations containing foreground information found', forground_coordinate_cnt)
+        tf.logging.info('%d out of %d locations containing foreground information', forground_coordinate_cnt, list(coordinates.values())[0].shape[0])
         return new_coordinates
 
 
