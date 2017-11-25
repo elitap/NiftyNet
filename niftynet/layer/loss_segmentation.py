@@ -9,6 +9,7 @@ import tensorflow as tf
 
 from niftynet.engine.application_factory import LossSegmentationFactory
 from niftynet.layer.base_layer import Layer
+from niftynet.engine.application_variables import TF_SUMMARIES
 
 M_tree = np.array([[0., 1., 1., 1., 1.],
                    [1., 0., 0.6, 0.2, 0.5],
@@ -40,6 +41,7 @@ class LossFunction(Layer):
                  prediction,
                  ground_truth=None,
                  weight_map=None,
+                 outputs_collector=None,
                  var_scope=None, ):
         """
         Compute loss from `prediction` and `ground truth`,
@@ -52,6 +54,7 @@ class LossFunction(Layer):
         :param prediction: input will be reshaped into (N, num_classes)
         :param ground_truth: input will be reshaped into (N,)
         :param weight_map: input will be reshaped into (N,)
+        :param outputs_collector: input will be reshaped into (N,)
         :param var_scope:
         :return:
         """
@@ -74,17 +77,18 @@ class LossFunction(Layer):
             for pred in prediction:
                 if self._loss_func_params:
                     data_loss.append(self._data_loss_func(
-                        pred, ground_truth, weight_map,
+                        pred, ground_truth, weight_map, outputs_collector,
                         **self._loss_func_params))
                 else:
                     data_loss.append(self._data_loss_func(
-                        pred, ground_truth, weight_map))
+                        pred, ground_truth, weight_map, outputs_collector))
             return tf.reduce_mean(data_loss)
 
 
 def generalised_dice_loss(prediction,
                           ground_truth,
                           weight_map=None,
+                          outputs_collector=None,
                           type_weight='Square'):
     """
     Function to calculate the Generalised Dice Loss defined in Sudre, C. et. al.
@@ -147,6 +151,7 @@ def generalised_dice_loss(prediction,
 def sensitivity_specificity_loss(prediction,
                                  ground_truth,
                                  weight_map=None,
+                                 outputs_collector=None,
                                  r=0.05):
     """
     Function to calculate a multiple-ground_truth version of
@@ -198,7 +203,7 @@ def l2_reg_loss(scope):
                      tf.get_collection('reg_var', scope)])
 
 
-def cross_entropy(prediction, ground_truth, weight_map=None):
+def cross_entropy(prediction, ground_truth, weight_map=None, outputs_collector=None):
     """
     Function to calculate the cross-entropy loss function
     :param prediction: the logits (before softmax)
@@ -247,7 +252,8 @@ def wasserstein_disagreement_map(prediction, ground_truth, M):
 
 def generalised_wasserstein_dice_loss(prediction,
                                       ground_truth,
-                                      weight_map=None):
+                                      weight_map=None,
+                                      outputs_collector=None):
     """
     Function to calculate the Generalised Wasserstein Dice Loss defined in
     Fidon, L. et. al. (2017) Generalised Wasserstein Dice Score for Imbalanced
@@ -287,7 +293,7 @@ def generalised_wasserstein_dice_loss(prediction,
     return tf.cast(WGDL, dtype=tf.float32)
 
 
-def dice_nosquare(prediction, ground_truth, weight_map=None):
+def dice_nosquare(prediction, ground_truth, weight_map=None, outputs_collector=None):
     """
     Function to calculate the classical dice loss
     :param prediction: the logits (before softmax)
@@ -329,7 +335,7 @@ def dice_nosquare(prediction, ground_truth, weight_map=None):
     return 1.0 - tf.reduce_mean(dice_score)
 
 
-def dice(prediction, ground_truth, weight_map=None):
+def dice(prediction, ground_truth, weight_map=None, outputs_collector=None):
     """
     Function to calculate the dice loss with the definition given in Milletari,
      F., Navab, N., & Ahmadi, S. A. (2016) V-net: Fully convolutional neural
@@ -349,6 +355,8 @@ def dice(prediction, ground_truth, weight_map=None):
         indices=ids,
         values=tf.ones_like(ground_truth, dtype=tf.float32),
         dense_shape=tf.to_int64(tf.shape(prediction)))
+
+    n_classes = prediction.get_shape()[1].value
     if weight_map is not None:
         n_classes = prediction.get_shape()[1].value
         weight_map_nclasses = tf.reshape(
@@ -369,6 +377,22 @@ def dice(prediction, ground_truth, weight_map=None):
     epsilon_denominator = 0.00001
 
     dice_score = dice_numerator / (dice_denominator + epsilon_denominator)
-    # dice_score.set_shape([n_classes])
-    # minimising (1 - dice_coefficients)
-    return 1.0 - tf.reduce_mean(dice_score)
+
+    if outputs_collector is not None:
+        for label in range(prediction.get_shape()[1].value):
+            outputs_collector.add_to_collection(
+                var=1.0 - dice_score[label], name='label_'+str(label)+'_dice',
+                average_over_devices=True, summary_type='scalar',
+                collection=TF_SUMMARIES)
+
+    one_hot_reduced = tf.sparse_reduce_sum(one_hot, reduction_axes=[0])
+    one_hot_reduced.set_shape((n_classes,))
+    zeros = tf.zeros_like(one_hot_reduced)
+    bool_mask = tf.not_equal(one_hot_reduced, zeros)
+    reduced_dice = tf.boolean_mask(dice_score, bool_mask)
+    #print(bool_mask.eval())
+    #print(dice_score.eval())
+    #print(reduced_dice.eval())
+
+
+    return 1.0 - tf.reduce_mean(reduced_dice)
