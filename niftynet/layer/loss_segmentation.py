@@ -18,6 +18,7 @@ M_tree = np.array([[0., 1., 1., 1., 1.],
                    [1., 0.5, 0.7, 0.5, 0.]], dtype=np.float64)
 
 LABELS = {
+    "Background": 0,
     "BrainStem": 1,
     "Chiasm": 2,
     "OpticNerve_L": 3,
@@ -390,7 +391,7 @@ def dice(prediction, ground_truth, weight_map=None, outputs_collector=None):
     #find out what happens here, can i use python code?
     if outputs_collector is not None:
         for organ_name, label in LABELS.iteritems():
-            if one_hot_summed[0] != 0:
+            if one_hot_summed[label] != 0:
                 outputs_collector.add_to_collection(
                     var=1.0 - dice_score[label], name=organ_name+'_dice',
                     average_over_devices=True, summary_type='scalar',
