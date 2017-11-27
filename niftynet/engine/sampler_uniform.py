@@ -30,13 +30,14 @@ class UniformSampler(Layer, InputBatchQueueRunner):
                  data_param,
                  batch_size,
                  windows_per_image,
-                 queue_length=10):
+                 queue_length=10,
+                 shuffle=True):
         self.reader = reader
         Layer.__init__(self, name='input_buffer')
         InputBatchQueueRunner.__init__(
             self,
             capacity=queue_length,
-            shuffle=True)
+            shuffle=shuffle)
         tf.logging.info('reading size of preprocessed images')
         self.window = ImageWindow.from_data_reader_properties(
             self.reader.input_sources,
@@ -64,6 +65,7 @@ class UniformSampler(Layer, InputBatchQueueRunner):
         a dictionary (required by input buffer)
         :return: output data dictionary {placeholders: data_array}
         """
+        tf.logging.info(self.window.n_samples)
         while True:
             image_id, data, _ = self.reader(idx=None, shuffle=True)
             if not data:
@@ -133,7 +135,7 @@ class UniformSampler(Layer, InputBatchQueueRunner):
                         ratio = foreground_cnt / background_cnt if background_cnt != 0.0 else 1.0
                         #print(ratio)
                         ratio_sum += ratio
-                    print(windows_per_volume, " windows sampled, ", label_inside_cnt, " contain label info, average sampling ratio ", ratio_sum/windows_per_volume)
+                    tf.logging.info(str(windows_per_volume) + " windows sampled, " + str(label_inside_cnt) + " contain label info, average sampling ratio " + str(ratio_sum/windows_per_volume))
 
             yield output_dict
 

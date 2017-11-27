@@ -330,6 +330,14 @@ def add_training_args(parser):
         default=1)
 
     parser.add_argument(
+        "--sample_per_volume_validation",
+        help="[Training only] Set number of samples to take from "
+             "each image that was loaded in a given validation epoch",
+        metavar='',
+        type=int,
+        default=1)
+
+    parser.add_argument(
         "--rotation_angle",
         help="The min/max angles of rotation when rotation "
              "augmentation is enabled",
