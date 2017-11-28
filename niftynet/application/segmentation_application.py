@@ -26,9 +26,9 @@ from niftynet.layer.rand_flip import RandomFlipLayer
 from niftynet.layer.rand_rotation import RandomRotationLayer
 from niftynet.layer.rand_spatial_scaling import RandomSpatialScalingLayer
 
-TRAINING_INPUT = {'image', 'label', 'weight', 'sampler'}
-FOREGROUND_INFERENCE_INPUT = {'image', 'foreground'}
-INFERENCE_INPUT = {'image'}
+TRAINING_INPUT = set(['image', 'label', 'weight', 'sampler'])
+FOREGROUND_INFERENCE_INPUT = (['image', 'foreground'])
+INFERENCE_INPUT = (['image'])
 SUPPORTED_INPUT = FOREGROUND_INFERENCE_INPUT | TRAINING_INPUT
 
 
@@ -39,7 +39,6 @@ class SegmentationApplication(BaseApplication):
         super(SegmentationApplication, self).__init__()
         tf.logging.info('starting segmentation application')
         self.is_training = is_training
-        self.cnt = 0
 
         self.net_param = net_param
         self.action_param = action_param
@@ -71,7 +70,7 @@ class SegmentationApplication(BaseApplication):
                 file_lists.append(data_partitioner.train_files)
                 file_lists.append(data_partitioner.validation_files)
             else:
-                file_lists.append(data_partitioner.all_files)
+                file_lists.append(data_partitioner.train_files)
 
             self.readers = []
             for file_list in file_lists:
@@ -246,7 +245,7 @@ class SegmentationApplication(BaseApplication):
     def connect_data_and_network(self,
                                  outputs_collector=None,
                                  gradients_collector=None):
-        # def data_net(for_training):
+        #def data_net(for_training):
         #    with tf.name_scope('train' if for_training else 'validation'):
         #        sampler = self.get_sampler()[0][0 if for_training else -1]
         #        data_dict = sampler.pop_batch_op()
@@ -259,11 +258,11 @@ class SegmentationApplication(BaseApplication):
                 return sampler.pop_batch_op()
 
         if self.is_training:
-            # if self.action_param.validation_every_n > 0:
+            #if self.action_param.validation_every_n > 0:
             #    data_dict, net_out = tf.cond(tf.logical_not(self.is_validation),
             #                                 lambda: data_net(True),
             #                                 lambda: data_net(False))
-            # else:
+            #else:
             #    data_dict, net_out = data_net(True)
             if self.action_param.validation_every_n > 0:
                 data_dict = tf.cond(tf.logical_not(self.is_validation),
@@ -307,17 +306,17 @@ class SegmentationApplication(BaseApplication):
                 average_over_devices=True, summary_type='scalar',
                 collection=TF_SUMMARIES)
 
-            # outputs_collector.add_to_collection(
+            #outputs_collector.add_to_collection(
             #    var=image*180.0, name='image',
             #    average_over_devices=False, summary_type='image3_sagittal',
             #    collection=TF_SUMMARIES)
 
-            # outputs_collector.add_to_collection(
+            #outputs_collector.add_to_collection(
             #    var=image, name='image',
             #    average_over_devices=False,
             #    collection=NETWORK_OUTPUT)
 
-            # outputs_collector.add_to_collection(
+            #outputs_collector.add_to_collection(
             #    var=tf.reduce_mean(image), name='mean_image',
             #    average_over_devices=False, summary_type='scalar',
             #    collection=CONSOLE)
