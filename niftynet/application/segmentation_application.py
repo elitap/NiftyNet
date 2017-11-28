@@ -27,8 +27,8 @@ from niftynet.layer.rand_rotation import RandomRotationLayer
 from niftynet.layer.rand_spatial_scaling import RandomSpatialScalingLayer
 
 TRAINING_INPUT = set(['image', 'label', 'weight', 'sampler'])
-FOREGROUND_INFERENCE_INPUT = (['image', 'foreground'])
-INFERENCE_INPUT = (['image'])
+FOREGROUND_INFERENCE_INPUT = set(['image', 'foreground'])
+INFERENCE_INPUT = set(['image'])
 SUPPORTED_INPUT = FOREGROUND_INFERENCE_INPUT | TRAINING_INPUT
 
 
