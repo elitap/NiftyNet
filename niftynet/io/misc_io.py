@@ -16,6 +16,7 @@ import tensorflow as tf
 from tensorflow.core.framework import summary_pb2
 
 from niftynet.utilities.util_import import check_module
+from niftynet.utilities.niftynet_global_config import NiftyNetGlobalConfig
 
 IS_PYTHON2 = False if sys.version_info[0] > 2 else True
 
@@ -382,6 +383,17 @@ def resolve_module_dir(module_dir_str, create_new=False):
     except TypeError:
         pass
 
+    try:
+        # interpret input as a path string relative to the global home
+        from niftynet.utilities.niftynet_global_config import \
+            NiftyNetGlobalConfig
+        home_location = NiftyNetGlobalConfig().get_niftynet_home_folder()
+        possible_dir = os.path.join(home_location, module_dir_str)
+        if os.path.isdir(possible_dir):
+            return os.path.abspath(possible_dir)
+    except (TypeError, ImportError, AttributeError):
+        pass
+
     if create_new:
         # try to create the folder
         folder_path = touch_folder(module_dir_str)
@@ -424,6 +436,11 @@ def resolve_checkpoint(checkpoint_name):
     # checkpoint_name.index is in the file system
     # eventually will support checkpoint names that can be referenced
     # in a paths file
+    if os.path.isfile(checkpoint_name + '.index'):
+        return checkpoint_name
+    home_folder = NiftyNetGlobalConfig().get_niftynet_home_folder()
+    checkpoint_name = to_absolute_path(input_path=checkpoint_name,
+                                       model_root=home_folder)
     if os.path.isfile(checkpoint_name + '.index'):
         return checkpoint_name
     raise ValueError('Invalid checkpoint {}'.format(checkpoint_name))
