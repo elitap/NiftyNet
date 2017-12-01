@@ -222,12 +222,25 @@ def cross_entropy(prediction, ground_truth, weight_map=None, outputs_collector=N
     :param weight_map:
     :return: the cross-entropy loss
     """
+    ground_truth = tf.to_int64(ground_truth)
     entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(
         logits=prediction, labels=ground_truth)
+
+
     if weight_map is not None:
         weight_map = tf.cast(tf.size(entropy), dtype=tf.float32) / \
                      tf.reduce_sum(weight_map) * weight_map
         entropy = tf.multiply(entropy, weight_map)
+
+    #find out what happens here, can i use python code?
+    if outputs_collector is not None:
+        for organ_name, label in LABELS.iteritems():
+                outputs_collector.add_to_collection(
+                    var=entropy[label], name=organ_name+'_ce',
+                    average_over_devices=True, summary_type='scalar',
+                    collection=TF_SUMMARIES)
+
+
     return tf.reduce_mean(entropy)
 
 
