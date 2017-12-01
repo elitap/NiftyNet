@@ -1,0 +1,4 @@
+full_e-5_96-1_dice_1024s.ini
+half_e-5_48-8_dice_1024s.ini
+quarter_e-5_48-8_dice_1024s.ini
+half_e-5_48-8_dice_1024s.ini

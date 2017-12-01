@@ -1,0 +1,3 @@
+quarter_e-3_48-8_gdsc_1024s.ini
+full_e-3_96-1_dice_1024s.ini
+full_e-4_96-1_dice_1024s.ini
