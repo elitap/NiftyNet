@@ -31,6 +31,22 @@ def execute(command):
 
     return exitCode
 
+def get_last_checkpoint(config):
+    checkpoints = range(0, 250001, 2000)
+    checkpoints.append(49999)
+    checkpoints.sort()
+
+    last_checkpoint_path = ''
+    last_checkpoint = 0
+    for checkpoint in checkpoints:
+        checkpoint_path = MODEL_BASE % (os.path.splitext(config)[0], checkpoint)
+        if os.path.exists(checkpoint_path):
+            last_checkpoint_path = checkpoint_path
+            last_checkpoint = checkpoint
+
+    return last_checkpoint_path, last_checkpoint
+
+
 
 def run_inference(configs, gpu):
 
@@ -39,21 +55,23 @@ def run_inference(configs, gpu):
         with open(configs, "r") as fptr:
             for config in fptr:
                 config = config.strip()
-                if (gpu == 0 and "gdsc" in config) or (gpu == 1 and "dice" in config):
+                if (gpu == 0 and "" in config) or (gpu == 1 and "" in config):
                     #border = "\"(8, 8, 8)\"" if ("48-8" in config or "24-24" in config) else "\"(16, 16, 16)\""
-                    checkpoints = range(50000, 250001, 2000)
+                    #checkpoints = range(0, 250001, 2000)
                     #checkpoints = range(12000, 50000, 2000)
-                    checkpoints.append(249999)
+
                     full_config = os.path.join(CONFIG_BASE, config)
-                    for checkpoint in checkpoints:
-                        checkpoint_path = MODEL_BASE % (os.path.splitext(config)[0], checkpoint)
-                        if os.path.exists(checkpoint_path):
-                            cmd = INFERENCE_CMD % (full_config, os.path.join(SAVE_DIR_BASE,str(checkpoint)), checkpoint, gpu, os.path.abspath(DATASET_SPLIT_FILE))
-                            logptr.write("execute " + cmd + " \n")
-                            logptr.flush()
-                            start = time.time()
-                            execute(cmd)
-                            logptr.write("execution time %0.3f \n" % ((time.time()-start)*1000.0))
+                    #for checkpoint in checkpoints:
+                    #    checkpoint_path = MODEL_BASE % (os.path.splitext(config)[0], checkpoint)
+                    checkpoint_path, checkpoint = get_last_checkpoint(config)
+
+                    if os.path.exists(checkpoint_path):
+                        cmd = INFERENCE_CMD % (full_config, os.path.join(SAVE_DIR_BASE,str(checkpoint)), checkpoint, gpu, os.path.abspath(DATASET_SPLIT_FILE))
+                        logptr.write("execute " + cmd + " \n")
+                        logptr.flush()
+                        start = time.time()
+                        execute(cmd)
+                        logptr.write("execution time %0.3f \n" % ((time.time()-start)*1000.0))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog='')

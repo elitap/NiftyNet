@@ -79,9 +79,9 @@ def getOriginalMeasurements(path, filter):
 def resampleAllModelsToOrigsize(model_dir):
     for model in os.listdir(model_dir):
         full_result_dir = os.path.join(model_dir, model)
-        if ("quarter_e-4_48-8_dice_50k_1024s" in model) and os.path.isdir(full_result_dir):
-            checkpoints = range(50000, 250000, 2000)
-            checkpoints.append(249999)
+        if ("" in model) and os.path.isdir(full_result_dir):
+            checkpoints = range(20000, 250000, 2000)
+            checkpoints.append(49999)
             for checkpoint in checkpoints:
                 checkpoint_dir = os.path.join(full_result_dir, RESULTDIR) % checkpoint
                 if os.path.exists(checkpoint_dir):
@@ -111,8 +111,8 @@ if __name__ == "__main__":
                         default='volume')
 
     args = parser.parse_args()
-    #resampleAllModelsToOrigsize(args.path)
-    resampleFolder(args.path, args.result, args.scale, args.volumefilter, args.origsize)
+    resampleAllModelsToOrigsize(args.path)
+    #resampleFolder(args.path, args.result, args.scale, args.volumefilter, args.origsize)
     #getOriginalMeasurements("/home/elias/Dokumente/head_neck_seg/NiftyNet/data/combined_challenge/Onsite","foreground")
 
 

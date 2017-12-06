@@ -9,7 +9,6 @@ import argparse
 RESULT_DIR = "output/%d/Test"
 #full sized result path for level1
 #RESULT_DIR = "output/%d/Test"
-GT_DIR = "Test%s/"
 GT_FILTER = "segmentation"
 ID_IDX = 9
 
@@ -24,16 +23,14 @@ LABELS = {
 }
 
 #MEASURES = ['ref volume', 'seg volume', 'ref bg volume', 'seg bg volume', 'fp', 'fn', 'tp', 'tn', 'n_intersection', 'n_union', 'sensitivity', 'specificity', 'accuracy', 'fpr', 'dice', 'haus_dist']
-MEASURES = ['dice']
+MEASURES = ['dice', 'sensitivity', 'specificity']
 
-def getGroundTruth(model, result_file, gt_base_path):
-    gt_postfix = ""
+def getGroundTruth(model, result_file, gt_path):
     #if "half" in model:
     #    gt_postfix = "_2er"
     #if "quarter" in model:
     #   gt_postfix = "_4er"
     id = result_file[:ID_IDX]
-    gt_path = os.path.join(gt_base_path, GT_DIR) % gt_postfix
     for gt_file in os.listdir(gt_path):
         if GT_FILTER in gt_file and id in gt_file:
             return os.path.join(gt_path, gt_file)
@@ -69,10 +66,10 @@ def evaluate(gt_base_path, result_base_path, result_file):
     with open(result_file, 'w') as fileptr:
         for result_dir in os.listdir(result_base_path):
             full_result_dir = os.path.join(result_base_path, result_dir)
-            if ("quarter_e-4_48-8_dice_50k_1024s" in result_dir) and os.path.isdir(full_result_dir):
-            #if ("1024s" in result_dir or "4096s" in result_dir) and os.path.isdir(full_result_dir):
-                checkpoints = range(50000, 250000, 2000)
-                checkpoints.append(249999)
+            #if ("quarter_e-4_48-8_dice_50k_1024s" in result_dir) and os.path.isdir(full_result_dir):
+            if ("1024s" in result_dir or "4096s" in result_dir) and os.path.isdir(full_result_dir):
+                checkpoints = range(0, 250000, 2000)
+                checkpoints.append(49999)
                 for checkpoint in checkpoints:
                     checkpoint_dir = os.path.join(full_result_dir, RESULT_DIR) % checkpoint
                     if os.path.isdir(checkpoint_dir):
