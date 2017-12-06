@@ -233,10 +233,10 @@ class ImageSetsPartitioner(object):
         # or writing filename lists
         try:
             csv_file = self.data_param[modality_name].csv_file
-            if not os.path.isfile(csv_file):
+#            if not os.path.isfile(csv_file):
                 # writing to the same folder as data_split_file
-                csv_file = os.path.join(os.path.dirname(self.data_split_file),
-                                        '{}.csv'.format(modality_name))
+#                csv_file = os.path.join(os.path.dirname(self.data_split_file),
+#                                        '{}.csv'.format(modality_name))
 
         except (AttributeError, TypeError):
             tf.logging.fatal('Missing `csv_file` field in the config file, '
