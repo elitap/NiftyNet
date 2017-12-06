@@ -1,0 +1,6 @@
+full_e-3_96-1_dice_1024s.ini
+full_e-3_96-1_gdsc_1024s.ini
+full_e-4_96-1_dice_1024s.ini
+full_e-4_96-1_gdsc_1024s.ini
+full_e-5_96-1_dice_1024s.ini
+full_e-5_96-1_gdsc_1024s.ini

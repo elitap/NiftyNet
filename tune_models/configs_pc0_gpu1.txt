@@ -1,0 +1,6 @@
+half_e-3_48-8_ce_1024s.ini
+half_e-3_48-8_dice_1024s.ini
+half_e-3_48-8_gdsc_1024s.ini
+half_e-3_96-1_dice_1024s.ini
+half_e-3_96-1_gdsc_1024s.ini
+half_e-4_48-8_dice_1024s.ini
