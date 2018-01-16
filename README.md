@@ -1,3 +1,9 @@
+[NiftyNet][nifty] fork with code to generate the results of:
+
+Tappeiner E, Pöll S, Hönig M, Raudaschl FP, Zaffino P, Spadea FM, Sharp CG, Schubert R, Fritscher K (2018) Efficient Multi-Organ Segmentation of the Head and Neck area using Hierarchical Neural Networks. Submitted to CARS.
+
+Details follow soon!
+
 # NiftyNet
 
 <img src="https://cmiclab.cs.ucl.ac.uk/CMIC/NiftyNet/raw/master/niftynet-logo.png" width="263" height="155">
@@ -148,4 +154,5 @@ This project is grateful for the support from the [Wellcome Trust][wt], the [Eng
 [ses]: https://www.ses.ac.uk/
 [ral]: http://www.stfc.ac.uk/about-us/where-we-work/rutherford-appleton-laboratory/
 [nvidia]: http://www.nvidia.com
+[nifty]: https://github.com/NifTK/NiftyNet
 

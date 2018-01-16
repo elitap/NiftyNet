@@ -9,12 +9,24 @@ import tensorflow as tf
 
 from niftynet.engine.application_factory import LossSegmentationFactory
 from niftynet.layer.base_layer import Layer
+from niftynet.engine.application_variables import TF_SUMMARIES
 
 M_tree = np.array([[0., 1., 1., 1., 1.],
                    [1., 0., 0.6, 0.2, 0.5],
                    [1., 0.6, 0., 0.6, 0.7],
                    [1., 0.2, 0.6, 0., 0.5],
                    [1., 0.5, 0.7, 0.5, 0.]], dtype=np.float64)
+
+LABELS = {
+    "Background": 0,
+    "BrainStem": 1,
+    "Chiasm": 2,
+    "OpticNerve_L": 3,
+    "OpticNerve_R": 4,
+    "Parotid_L": 5,
+    "Parotid_R": 6,
+    "Mandible": 7
+}
 
 
 class LossFunction(Layer):
@@ -206,6 +218,7 @@ def cross_entropy(prediction, ground_truth, weight_map=None):
     :param weight_map:
     :return: the cross-entropy loss
     """
+    ground_truth = tf.to_int64(ground_truth)
     entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(
         logits=prediction, labels=ground_truth)
     if weight_map is not None:
@@ -349,8 +362,9 @@ def dice(prediction, ground_truth, weight_map=None):
         indices=ids,
         values=tf.ones_like(ground_truth, dtype=tf.float32),
         dense_shape=tf.to_int64(tf.shape(prediction)))
+    n_classes = prediction.get_shape()[1].value
+    one_hot_summed = tf.sparse_reduce_sum(one_hot, reduction_axes=[0])
     if weight_map is not None:
-        n_classes = prediction.get_shape()[1].value
         weight_map_nclasses = tf.reshape(
             tf.tile(weight_map, [n_classes]), prediction.get_shape())
         dice_numerator = 2.0 * tf.sparse_reduce_sum(
@@ -364,11 +378,13 @@ def dice(prediction, ground_truth, weight_map=None):
         dice_numerator = 2.0 * tf.sparse_reduce_sum(
             one_hot * prediction, reduction_axes=[0])
         dice_denominator = \
-            tf.reduce_sum(tf.square(prediction), reduction_indices=[0]) + \
-            tf.sparse_reduce_sum(one_hot, reduction_axes=[0])
+            tf.reduce_sum(tf.square(prediction), reduction_indices=[0]) + one_hot_summed
+
     epsilon_denominator = 0.00001
 
     dice_score = dice_numerator / (dice_denominator + epsilon_denominator)
-    # dice_score.set_shape([n_classes])
-    # minimising (1 - dice_coefficients)
-    return 1.0 - tf.reduce_mean(dice_score)
+
+    #return 1.0 - tf.reduce_mean(dice_score)
+    #just consider labels appearing in the ground truth
+    return 1.0 - (tf.reduce_sum(dice_score) / tf.to_float(tf.count_nonzero(one_hot_summed)))
+
