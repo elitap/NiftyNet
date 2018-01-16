@@ -434,9 +434,9 @@ class ApplicationDriver(object):
 
             # run validations if required
             if iter_i > 0 and self.validation_every_n > 0 and \
-                    (iter_i % self.validation_every_n == 0):
-                for _ in range(self.validation_max_iter):
-                    iter_msg.current_iter, iter_msg.phase = iter_i, VALID
+                    ((iter_i % self.validation_every_n == 0) or (iter_i+1 == self.final_iter)):
+                for valid_iter_i in range(self.validation_max_iter):
+                    iter_msg.current_iter, iter_msg.phase = iter_i+valid_iter_i, VALID
                     self.run_vars(sess, iter_msg)
                     # save iteration results
                     if writer_valid is not None:
