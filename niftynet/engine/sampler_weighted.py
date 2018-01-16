@@ -32,13 +32,15 @@ class WeightedSampler(UniformSampler):
                  data_param,
                  batch_size,
                  windows_per_image,
-                 queue_length=10):
+                 queue_length=10,
+                 shuffle=True):
         UniformSampler.__init__(self,
                                 reader=reader,
                                 data_param=data_param,
                                 batch_size=batch_size,
                                 windows_per_image=windows_per_image,
-                                queue_length=queue_length)
+                                queue_length=queue_length,
+                                shuffle=shuffle)
         tf.logging.info('Initialised weighted sampler window instance')
         self.spatial_coordinates_generator = weighted_spatial_coordinates
 
@@ -114,9 +116,35 @@ def weighted_spatial_coordinates(subject_id,
     # i.e. first sort the sampling frequencies, normalise them
     # to sum to one, and then accumulate them in order
     flatten_map = cropped_map.flatten()
-    sorted_data = np.cumsum(np.divide(np.sort(flatten_map), flatten_map.sum()))
+    sorted_map = np.sort(flatten_map)
+    sorted_data = np.cumsum(np.divide(sorted_map, flatten_map.sum()))
     # get the sorting indexes to that we can invert the sorting later on.
+
     sorted_indexes = np.argsort(flatten_map)
+    unique = np.unique(flatten_map)
+    for val in unique:
+        #background is not sampled, no randomness required
+        if val == 0:
+            continue
+        permuted_submap = np.random.permutation(sorted_indexes[sorted_map == val])
+        sorted_indexes[sorted_map == val] = permuted_submap
+
+    #import matplotlib.pyplot as plt
+    #plt.plot(sorted_indexes_shuffle, color='lightblue', linestyle='-', markersize=0.1, label="shuffled sorted indices")
+    #plt.plot(flatten_map[sorted_indexes_shuffle], 'y--', sorted_map, 'g-')
+    #plt.hold
+
+    #plt.plot(sorted_indexes,'r-', label="sorted indices")
+    #plt.plot(flatten_map[sorted_indexes_shuffle]*len(flatten_map), 'g-', markersize=5, label="sorted map")
+
+    #plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=3, mode="expand", borderaxespad=0.)
+
+    #plt.xlabel("Index")
+    #plt.ylabel("Mapped index")
+
+    #plt.show()
+    #plt.close()
+
 
     middle_coords = np.zeros((n_samples, N_SPATIAL), dtype=np.int32)
     for sample in range(0, n_samples):
