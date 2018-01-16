@@ -129,22 +129,6 @@ def weighted_spatial_coordinates(subject_id,
         permuted_submap = np.random.permutation(sorted_indexes[sorted_map == val])
         sorted_indexes[sorted_map == val] = permuted_submap
 
-    #import matplotlib.pyplot as plt
-    #plt.plot(sorted_indexes_shuffle, color='lightblue', linestyle='-', markersize=0.1, label="shuffled sorted indices")
-    #plt.plot(flatten_map[sorted_indexes_shuffle], 'y--', sorted_map, 'g-')
-    #plt.hold
-
-    #plt.plot(sorted_indexes,'r-', label="sorted indices")
-    #plt.plot(flatten_map[sorted_indexes_shuffle]*len(flatten_map), 'g-', markersize=5, label="sorted map")
-
-    #plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, ncol=3, mode="expand", borderaxespad=0.)
-
-    #plt.xlabel("Index")
-    #plt.ylabel("Mapped index")
-
-    #plt.show()
-    #plt.close()
-
 
     middle_coords = np.zeros((n_samples, N_SPATIAL), dtype=np.int32)
     for sample in range(0, n_samples):
