@@ -210,7 +210,7 @@ def add_network_args(parser):
         metavar='TYPE_STR',
         help="How to sample patches from each loaded image:"
              " 'grid': samples the whole input in a grid based manner,"
-             " 'resize': requires the grid to contain foreground, as defined in "
+             " 'foreground': requires the grid to contain foreground, as defined in "
              "           the foreground mod, unseen parts of the input are set to zero.",
         choices=['grid', 'foreground'],
         default='grid')
