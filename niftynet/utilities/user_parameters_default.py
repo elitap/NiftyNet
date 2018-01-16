@@ -206,6 +206,16 @@ def add_network_args(parser):
         default='uniform')
 
     parser.add_argument(
+        "--inference_sampling",
+        metavar='TYPE_STR',
+        help="How to sample patches from each loaded image:"
+             " 'grid': samples the whole input in a grid based manner,"
+             " 'resize': requires the grid to contain foreground, as defined in "
+             "           the foreground mod, unseen parts of the input are set to zero.",
+        choices=['grid', 'foreground'],
+        default='grid')
+
+    parser.add_argument(
         "--queue_length",
         help="Set size of preprocessing buffer queue",
         metavar='',
@@ -315,6 +325,14 @@ def add_training_args(parser):
         "--sample_per_volume",
         help="[Training only] Set number of samples to take from "
              "each image that was loaded in a given training epoch",
+        metavar='',
+        type=int,
+        default=1)
+
+    parser.add_argument(
+        "--sample_per_volume_validation",
+        help="[Training only] Set number of samples to take from "
+             "each image that was loaded in a given validation epoch",
         metavar='',
         type=int,
         default=1)

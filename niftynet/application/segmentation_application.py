@@ -26,7 +26,10 @@ from niftynet.layer.rand_flip import RandomFlipLayer
 from niftynet.layer.rand_rotation import RandomRotationLayer
 from niftynet.layer.rand_spatial_scaling import RandomSpatialScalingLayer
 
-SUPPORTED_INPUT = set(['image', 'label', 'weight', 'sampler'])
+TRAINING_INPUT = set(['image', 'label', 'weight', 'sampler'])
+FOREGROUND_INFERENCE_INPUT = set(['image', 'foreground'])
+INFERENCE_INPUT = set(['image'])
+SUPPORTED_INPUT = FOREGROUND_INFERENCE_INPUT | TRAINING_INPUT
 
 
 class SegmentationApplication(BaseApplication):
@@ -71,12 +74,15 @@ class SegmentationApplication(BaseApplication):
 
             self.readers = []
             for file_list in file_lists:
-                reader = ImageReader(SUPPORTED_INPUT)
+                reader = ImageReader(TRAINING_INPUT)
                 reader.initialise(data_param, task_param, file_list)
                 self.readers.append(reader)
 
         else:  # in the inference process use image input only
-            inference_reader = ImageReader(['image'])
+            input_types = INFERENCE_INPUT
+            if self.net_param.inference_sampling in FOREGROUND_INFERENCE_INPUT:
+                input_types = input_types.union(FOREGROUND_INFERENCE_INPUT)
+            inference_reader = ImageReader(input_types)
             file_list = data_partitioner.inference_files
             inference_reader.initialise(data_param, task_param, file_list)
             self.readers = [inference_reader]
@@ -158,18 +164,20 @@ class SegmentationApplication(BaseApplication):
             reader=reader,
             data_param=self.data_param,
             batch_size=self.net_param.batch_size,
-            windows_per_image=self.action_param.sample_per_volume,
-            queue_length=self.net_param.queue_length) for reader in
-            self.readers]]
+            windows_per_image=self.action_param.sample_per_volume if cnt == 0 else self.action_param.sample_per_volume_validation,
+            queue_length=self.net_param.queue_length,
+            shuffle=True if cnt == 0 else False) for cnt, reader in
+            enumerate(self.readers)]]
 
     def initialise_weighted_sampler(self):
         self.sampler = [[WeightedSampler(
             reader=reader,
             data_param=self.data_param,
             batch_size=self.net_param.batch_size,
-            windows_per_image=self.action_param.sample_per_volume,
-            queue_length=self.net_param.queue_length) for reader in
-            self.readers]]
+            windows_per_image=self.action_param.sample_per_volume if cnt == 0 else self.action_param.sample_per_volume_validation,
+            queue_length=self.net_param.queue_length,
+            shuffle=True if cnt == 0 else False) for cnt, reader in
+            enumerate(self.readers)]]
 
     def initialise_resize_sampler(self):
         self.sampler = [[ResizeSampler(
@@ -187,7 +195,8 @@ class SegmentationApplication(BaseApplication):
             batch_size=self.net_param.batch_size,
             spatial_window_size=self.action_param.spatial_window_size,
             window_border=self.action_param.border,
-            queue_length=self.net_param.queue_length) for reader in
+            queue_length=self.net_param.queue_length,
+            foreground_name='foreground') for reader in
             self.readers]]
 
     def initialise_grid_aggregator(self):
