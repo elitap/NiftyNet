@@ -1,0 +1,101 @@
+Input params at 2017-12-31 14:08:29.
+[VOLUME]
+-- spatial_window_size: (24, 24, 24)
+-- pixdim: ()
+-- csv_file: ./tune_models_2nd/h_e-3_48-8_d_100k__full_e-3_24-24_dice_1024s/volume.csv
+-- axcodes: ()
+-- filename_contains: (u'_volume',)
+-- filename_not_contains: ()
+-- path_to_search: ./data/combined_challenge/all
+-- interp_order: 3
+[CONFIG_FILE]
+-- path: ./config/tune_configs_2nd/h_e-3_48-8_d_100k__full_e-3_24-24_dice_1024s.ini
+[SAMPLER]
+-- spatial_window_size: (24, 24, 24)
+-- pixdim: ()
+-- csv_file: ./tune_models_2nd/h_e-3_48-8_d_100k__full_e-3_24-24_dice_1024s/sampler.csv
+-- axcodes: ()
+-- filename_contains: (u'_foreground',)
+-- filename_not_contains: ()
+-- path_to_search: ./data/combined_challenge/best_out_stage1
+-- interp_order: 0
+[SEGMENTATION]
+-- spatial_window_size: (24, 24, 24)
+-- pixdim: ()
+-- csv_file: ./tune_models_2nd/h_e-3_48-8_d_100k__full_e-3_24-24_dice_1024s/segmentation.csv
+-- axcodes: ()
+-- filename_contains: (u'_segmentation',)
+-- filename_not_contains: ()
+-- path_to_search: ./data/combined_challenge/all
+-- interp_order: 0
+[CUSTOM]
+-- proba_connect: True
+-- foreground: (u'sampler',)
+-- min_numb_labels: 1
+-- weight: ()
+-- compulsory_labels: (0, 1)
+-- min_sampling_ratio: 0
+-- rand_samples: 0
+-- label: (u'segmentation',)
+-- output_prob: False
+-- sampler: (u'sampler',)
+-- label_normalisation: False
+-- image: (u'volume',)
+-- num_classes: 8
+-- name: net_segment
+[TRAINING]
+-- rotation_angle: (-5.0, 5.0)
+-- loss_type: Dice
+-- max_iter: 100001
+-- sample_per_volume: 1024
+-- tensorboard_every_n: 20
+-- validation_max_iter: 512
+-- random_flipping_axes: -1
+-- save_every_n: 2000
+-- max_checkpoints: 100
+-- exclude_fraction_for_inference: 0.0
+-- optimiser: adam
+-- sample_per_volume_validation: 128
+-- lr: 0.001
+-- rotation_angle_z: ()
+-- rotation_angle_y: ()
+-- rotation_angle_x: ()
+-- scaling_percentage: (-8.0, 8.0)
+-- starting_iter: 50000
+-- exclude_fraction_for_validation: 0.0
+-- validation_every_n: 10000
+[NETWORK]
+-- histogram_ref_file: 
+-- multimod_foreground_type: and
+-- volume_padding_size: (3, 3, 3)
+-- weight_initializer: he_normal
+-- name: highres3dnet
+-- decay: 0.0
+-- activation_function: relu
+-- normalise_foreground_only: False
+-- bias_initializer_args: {}
+-- inference_sampling: foreground
+-- batch_size: 24
+-- norm_type: percentile
+-- foreground_type: otsu_plus
+-- window_sampling: weighted
+-- whitening: True
+-- reg_type: L2
+-- bias_initializer: zeros
+-- weight_initializer_args: {}
+-- queue_length: 1
+-- normalisation: False
+-- cutoff: (0.01, 0.99)
+[INFERENCE]
+-- border: (6, 6, 6)
+-- output_interp_order: 0
+-- inference_iter: 0
+-- save_seg_dir: ./output
+-- spatial_window_size: (24, 24, 24)
+[SYSTEM]
+-- cuda_devices: 0
+-- num_gpus: 1
+-- num_threads: 2
+-- dataset_split_file: /home/ibia/Dokumente/elias/NiftyNet/data/combined_challenge/test_data_split.csv
+-- model_dir: /home/ibia/Dokumente/elias/NiftyNet/tune_models_2nd/h_e-3_48-8_d_100k__full_e-3_24-24_dice_1024s
+-- action: train
