@@ -10,7 +10,7 @@ def check_spatial_dims(input_tensor, criteria):
     criteria can be a lambda function
     e.g. lambda x : x > 10 checks whether each dim is greater than 10
     """
-    spatial_dims = input_tensor.get_shape()[1:-1].as_list()
+    spatial_dims = input_tensor.shape[1:-1].as_list()
     all_dims_satisfied = np.all([criteria(x) for x in spatial_dims])
     if not all_dims_satisfied:
         import inspect
@@ -26,7 +26,7 @@ def infer_spatial_rank(input_tensor):
     """
     e.g. given an input tensor [Batch, X, Y, Z, Feature] the spatial rank is 3
     """
-    dims = input_tensor.get_shape().ndims - 2
+    dims = input_tensor.shape.ndims - 2
     assert dims > 0, "input tensor should have at least one spatial dim, " \
                      "in addition to batch and channel dims"
     return dims
@@ -36,10 +36,12 @@ def trivial_kernel(kernel_shape):
     """
     This function generates a trivial kernel with all 0s except for the
     element in its spatial center
-    e.g. trivial_kernel((3, 3, 1, 1,)) returns a kernel of
-    [[[[0]], [[0]], [[0]]],
-     [[[0]], [[1]], [[0]]],
-     [[[0]], [[0]], [[0]]]]
+    e.g. trivial_kernel((3, 3, 1, 1,)) returns a kernel of::
+
+        [[[[0]], [[0]], [[0]]],
+         [[[0]], [[1]], [[0]]],
+         [[[0]], [[0]], [[0]]]]
+
     kernel_shape[-1] and kernel_shape[-2] should be 1, so that it operates
     on the spatial dims only.  However, there is no exact spatial centre
     if np.any((kernel_shape % 2) == 0). This is fine in many cases
@@ -56,19 +58,20 @@ def trivial_kernel(kernel_shape):
 
 def expand_spatial_params(input_param, spatial_rank):
     """
-    expand input parameter
-    e.g., kernel_size=3 is converted to kernel_size=[3, 3, 3]
-    for 3D images
+    Expand input parameter
+    e.g., ``kernel_size=3`` is converted to ``kernel_size=[3, 3, 3]``
+    for 3D images (when ``spatial_rank == 3``).
     """
+    spatial_rank = int(spatial_rank)
     try:
         input_param = int(input_param)
         return (input_param,) * spatial_rank
     except (ValueError, TypeError):
         pass
-    input_param = np.asarray(input_param).flatten().tolist()
-    assert len(input_param) == spatial_rank, \
-        'param length should be the same as the spatial rank'
-    return tuple(input_param)
+    input_param = np.asarray(input_param).flatten().astype(np.int).tolist()
+    assert len(input_param) >= spatial_rank, \
+        'param length should be at least have the length of spatial rank'
+    return tuple(input_param[:spatial_rank])
 
 # class RequireKeywords(object):
 #    def __init__(self, *list_of_keys):
