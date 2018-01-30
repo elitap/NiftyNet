@@ -50,9 +50,9 @@ def collectImgWithLabels(dataset, labelpostfix, volumepostfix):
                 if labelpostfix in segmentation and file[:9] in segmentation:
                     itk_img, segmentationInfo = getImageInfo(segmentation, dataset)
 
-                    mand_and_par = sitk.BinaryThreshold(itk_img, 5, 8) #lables for right/left parotis and mandibula
+                    #mand_and_par = sitk.BinaryThreshold(itk_img, 5, 8) #lables for right/left parotis and mandibula
 
-                    segmentationInfo.labelBB = getBBforLabelId(mand_and_par, 1) #get bb of segmentation
+                    #segmentationInfo.labelBB = getBBforLabelId(mand_and_par, 1) #get bb of segmentation
 
                 #if "foreground" in segmentation and file[:9] in segmentation:
                 #    _, foregroundInfo = getImageInfo(segmentation, dataset)

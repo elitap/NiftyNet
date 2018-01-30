@@ -4,8 +4,8 @@ import argparse
 import numpy as np
 import SimpleITK as sitk
 
-def combineLabels(image_itk, dilation_radius = 3):
 
+def combineLabels(image_itk, dilation_radius = 3):
     image_np = sitk.GetArrayFromImage(image_itk)
     image_np[image_np != 0] = 1.0
 
@@ -32,21 +32,30 @@ def combineLabels(image_itk, dilation_radius = 3):
     return new_image_itk
 
 
-def generateForgroundMap(dir, filter):
-    for file in os.listdir(dir):
-        full_file = os.path.join(dir,file)
+def generateForgroundMap(indir, outdir, dilation_radius, filter):
+    for file in os.listdir(indir):
+        full_file = os.path.join(indir,file)
         if os.path.isfile(full_file) and filter in file:
             print file
-            foreground = combineLabels(sitk.ReadImage(full_file))
-            sitk.WriteImage(foreground, os.path.join(dir,file[:10] + "foreground.nrrd"))
+            foreground = combineLabels(sitk.ReadImage(full_file), dilation_radius)
+            sitk.WriteImage(foreground, os.path.join(outdir,file[:10] + "foreground_dil"+str(dilation_radius)+".nii.gz"))
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog='')
 
-    parser.add_argument('--dir',
+    parser.add_argument('--data',
                         required=True,
-                        help=("dataset path")
+                        help="dataset path, containing segmentations that are binarized and dilated"
+                        )
+    parser.add_argument('--outdir',
+                        required=True,
+                        help="output directory where the results are saved to"
+                        )
+    parser.add_argument('--dilationRadius',
+                        default=3,
+                        type=int,
+                        help="dilation radius applied"
                         )
     parser.add_argument('--filter',
                         required=False,
@@ -54,4 +63,4 @@ if __name__ == "__main__":
                         )
 
     args = parser.parse_args()
-    generateForgroundMap(args.dir, args.filter)
+    generateForgroundMap(args.data, args.outdir, args.dilationRadius, args.filter)

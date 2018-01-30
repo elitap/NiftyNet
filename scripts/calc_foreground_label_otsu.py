@@ -55,7 +55,7 @@ def gnerateForgroundMap(dir, filter):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog='')
 
-    parser.add_argument('--dir',
+    parser.add_argument('--datasetpath',
                         required=True,
                         help="dataset path containing ct image volumes"
                         )

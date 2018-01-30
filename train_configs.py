@@ -33,6 +33,10 @@ def execute(command):
 def run_train(configs, gpu, stage):
 
     log = ((LOGFILE) % (stage, gpu))
+    logsplit = os.path.split(log)
+    if not os.path.exists(logsplit[0]):
+        os.makedirs(logsplit[0])
+
     with open(log, 'a') as logptr:
         with open(configs, "r") as fptr:
             for config in fptr:

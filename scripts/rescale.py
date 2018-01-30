@@ -9,7 +9,7 @@ from defs import UP_SCALE_SUBDIR
 
 VALID_FILES = [".mha", ".nrrd", ".mhd", ".nii", ".gz"]
 
-RESULTDIR = "output/%d"
+RESULTDIR = "output/%s"
 
 def resample(infile, outfile, spacingScale, interpolationtype, origsize):
     itk_img = sitk.ReadImage(infile)
@@ -73,19 +73,22 @@ def getOriginalMeasurements(path, filter):
     print sizeInfo
 
 
-def resampleAllModelsToOrigsize(model_dir):
+def resampleAllModelsToOrigsize(model_dir, single_checkpoint):
     for model in os.listdir(model_dir):
         full_result_dir = os.path.join(model_dir, model)
         if ("" in model) and os.path.isdir(full_result_dir):
-            checkpoints = range(50000, 50001, 2000)
+            checkpoints = []
+            if single_checkpoint is None:
+                checkpoints = range(32000, 50001, 2000)
+            else:
+                checkpoints.append(single_checkpoint)
             for checkpoint in checkpoints:
-                checkpoint_dir = os.path.join(full_result_dir, RESULTDIR) % checkpoint
+                checkpoint_dir = os.path.join(full_result_dir, RESULTDIR) % str(checkpoint)
                 if os.path.exists(checkpoint_dir):
                     resampleFolder(checkpoint_dir, os.path.join(checkpoint_dir, UP_SCALE_SUBDIR))
                 else:
                     print "Checkpoint not found: ", checkpoint_dir
 
-            checkpoint_dir = os.path.join(full_result_dir, "output/%s") % "100000_all"
             if os.path.exists(checkpoint_dir):
                 resampleFolder(checkpoint_dir, os.path.join(checkpoint_dir, UP_SCALE_SUBDIR))
 
@@ -93,31 +96,37 @@ def resampleAllModelsToOrigsize(model_dir):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog='')
 
-    parser.add_argument('--path',
+    parser.add_argument('--datasetpath',
                         required=True,
-                        help="path to directory with images to rescale or the model directory if the results of more models are to rescale"
+                        help="path to directory with images to rescale or the model directory if the results of "
+                             "more models are to rescale"
+                        )
+    parser.add_argument('--checkpoint',
+                        required=False,
+                        type=str,
+                        default=None
                         )
     parser.add_argument('--result',
                         required=False,
                         default='',
                         help="path to directory to save the rescaled images"
                         )
-    parser.add_argument('--origsize',
-                        action='store_true',
-                        help="if set images are rescaled to their original size")
     parser.add_argument('--scale',
                         required=False,
                         type=float,
-                        default=2)
+                        default=-1)
     parser.add_argument('--volumefilter',
                         required=False,
                         default='volume',
                         help="filter for volumes to change the interpolation correctly")
 
 
+
     args = parser.parse_args()
-    #resampleAllModelsToOrigsize(args.path)
-    resampleFolder(args.path, args.result, args.scale, args.volumefilter, args.origsize)
+    if args.scale == -1:
+        resampleAllModelsToOrigsize(args.path, args.checkpoint)
+    else:
+        resampleFolder(args.path, args.result, args.scale, args.volumefilter, False)
 
 
 

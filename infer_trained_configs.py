@@ -48,6 +48,11 @@ def get_last_checkpoint(config, stage):
 
 def run_inference(configs, gpu, dataset_splitfile, single_checkpoint, seg_postfix, stage):
     log = (LOGFILE) % (stage, gpu)
+
+    logsplit = os.path.split(log)
+    if not os.path.exists(logsplit[0]):
+        os.makedirs(logsplit[0])
+
     with open(log, 'w') as logptr:
         with open(configs, "r") as fptr:
             for config in fptr:
