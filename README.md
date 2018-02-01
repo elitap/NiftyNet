@@ -56,7 +56,7 @@ The final evaluation results, with a postprocessing step after the inference can
 * `python script/postprocess.py --resdir fine_stage/selected_config/output/50000 --postprocdir fine_stage/selected_config/output/50000_post --foreground data/HaN_MICCAI2015_Dataset/mask_fine_stage`
 * `python script/collect_results.py --modeldir fine_stage --gtdir data/HaN_MICCAI2015_Dataset/full_dataset --resultfile fine_res.csv --checkpoint 50000_post --useplastimatch`
 * `python script/evaluate_results.py --resultfile fine_res.csv`
-
+    
 [nifty]: https://github.com/NifTK/NiftyNet
 [dataset]: http://www.imagenglab.com/newsite/pddca/
 

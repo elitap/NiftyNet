@@ -19,14 +19,14 @@ def resample(infile, outfile, spacingScale, interpolationtype, origsize):
         newSize = ORIG_SIZE[id][0]
         newSpacing = ORIG_SIZE[id][1]
     else:
-        newSpacing = np.array(itk_img.GetSpacing()) * spacingScale
+        newSpacing = np.array(itk_img.GetSpacing()) * float(spacingScale)
         #newSpacing = np.floor(newSpacing * 10)/10
         imagescale = np.array(itk_img.GetSpacing()) / newSpacing
 
         newSize = np.array(itk_img.GetSize()) * imagescale
 
-        newSpacing[2] = newSpacing[2] / spacingScale
-        newSize[2] = newSize[2] * spacingScale
+        newSpacing[2] = newSpacing[2] / float(spacingScale)
+        newSize[2] = newSize[2] * float(spacingScale)
 
         newSize = newSize.round().astype(int).tolist()
         newSpacing = newSpacing.tolist()
@@ -50,7 +50,7 @@ def resample(infile, outfile, spacingScale, interpolationtype, origsize):
     sitk.WriteImage(resampled_img, outfile)
 
 
-def resampleFolder(inpath, outpath, scale=2, volfilter="volume", origsize=True):
+def resampleFolder(inpath, outpath, scale="-1", volfilter="volume", origsize=True):
     if not os.path.exists(outpath):
         os.mkdir(outpath)
     for file in os.listdir(inpath):
@@ -76,7 +76,7 @@ def getOriginalMeasurements(path, filter):
 def resampleAllModelsToOrigsize(model_dir, single_checkpoint):
     for model in os.listdir(model_dir):
         full_result_dir = os.path.join(model_dir, model)
-        if ("" in model) and os.path.isdir(full_result_dir):
+        if ("half" in model or "quarter" in model) and os.path.isdir(full_result_dir):
             checkpoints = []
             if single_checkpoint is None:
                 checkpoints = range(32000, 50001, 2000)
@@ -113,8 +113,10 @@ if __name__ == "__main__":
                         )
     parser.add_argument('--scale',
                         required=False,
+                        default=-1,
                         type=float,
-                        default=-1)
+                        help="a float being multiplied to the spacing 0 if the images should be rescaled"
+                             "to their original size")
     parser.add_argument('--volumefilter',
                         required=False,
                         default='volume',
@@ -123,11 +125,7 @@ if __name__ == "__main__":
 
 
     args = parser.parse_args()
-    if args.scale == -1:
-        resampleAllModelsToOrigsize(args.path, args.checkpoint)
+    if args.scale == -1 and args.result is None:
+        resampleAllModelsToOrigsize(args.datasetpath, args.checkpoint)
     else:
-        resampleFolder(args.path, args.result, args.scale, args.volumefilter, False)
-
-
-
-
+        resampleFolder(args.datasetpath, args.result, args.scale, args.volumefilter, args.scale == 0)
