@@ -108,7 +108,7 @@ if __name__ == "__main__":
                         )
     parser.add_argument('--result',
                         required=False,
-                        default='',
+                        default=None,
                         help="path to directory to save the rescaled images"
                         )
     parser.add_argument('--scale',
