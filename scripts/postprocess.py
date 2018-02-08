@@ -70,7 +70,7 @@ def postproc(resdir, postprocdir, filter_dir, coarse_stage_out_name_filter, dila
                         print coarse_stage_out_name_filter, "not found in", filter
 
 
-def old_postproc(filter_itk, res_itk, dilation_radius):
+def filter_using_coarse_mask(filter_itk, res_itk, dilation_radius):
     cast_img_filter = sitk.CastImageFilter()
     cast_img_filter.SetOutputPixelType(sitk.sitkUInt8)
     filter_itk = cast_img_filter.Execute(filter_itk)

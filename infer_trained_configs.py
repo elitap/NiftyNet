@@ -56,6 +56,9 @@ def run_inference(configs, gpu, dataset_splitfile, single_checkpoint, seg_postfi
     with open(log, 'w') as logptr:
         with open(configs, "r") as fptr:
             for config in fptr:
+                if len(config) == 0 or config[0] == '#':
+                    continue
+
                 config = config.strip()
                 full_config = os.path.join((CONFIG_BASE % (stage)), config)
 
