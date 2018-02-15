@@ -66,7 +66,7 @@ def combineLabels(subjdir, outdir, rescale):
             if os.path.exists(labelpath):
                 label_cnt += 1
                 #print os.path.join(subjdir, LABEL_DIR, key)
-                itkImg = sitk.ReadImage(os.path.join(subjdir, LABEL_DIR, key))
+                itkImg = sitk.ReadImage(labelpath)
 
                 if rescale:
                     itkImg = resample(SPACING, itkImg)
