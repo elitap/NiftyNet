@@ -40,7 +40,7 @@ To use the coarse network to generate the foreground mask used by the sampler of
 
 * `python infer_trained_configs.py --config scripts_configs/inference_config.txt --gpu 0 --stage coarse --checkpoint 100000 --splitfile data/HaN_MICCAI2015_Dataset/infer_all_for_fine_stage.csv`
 * `python scripts/rescale.py --datasetpath coarse_stage --checkpoint 100000`
-* `python scripts/create_maskfrom_labels.py --data coarse_stage/half_e-3_48-8_dice_1024s/output/100000 --outdir data/HaN_MICCAI2015_Dataset/mask_fine_stage` 
+* `python scripts/create_maskfrom_labels.py --data coarse_stage/half_e-3_48-8_dice_1024s/output/100000/upscaled --outdir data/HaN_MICCAI2015_Dataset/mask_fine_stage` 
 
 #### Fine Stage Training
 
