@@ -47,9 +47,10 @@ def gnerateForgroundMap(dir, filter):
     for file in os.listdir(dir):
         full_file = os.path.join(dir,file)
         if os.path.isfile(full_file) and filter in file:
-            print file
+            outfile = file.replace (filter, "foreground")
+            print file, "->", outfile
             foreground = getForeground(sitk.ReadImage(full_file))
-            sitk.WriteImage(foreground, os.path.join(dir,file[:10] + "foreground.nrrd"))
+            sitk.WriteImage(foreground, os.path.join(dir,outfile))
 
 
 if __name__ == "__main__":
