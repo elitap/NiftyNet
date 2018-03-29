@@ -27,3 +27,5 @@ niftynet/info.py
 doc/source/niftynet*
 doc/source/modules.rst
 .vscode/
+
+*.nrrd
