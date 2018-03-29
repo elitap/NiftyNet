@@ -29,3 +29,6 @@ doc/source/modules.rst
 .vscode/
 
 *.nrrd
+coarse_stage/
+fine_stage/
+data/
