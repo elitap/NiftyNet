@@ -5,6 +5,7 @@ import subprocess
 import sys
 import SimpleITK as sitk
 import numpy as np
+import uuid
 
 from scripts import calc_foreground_label_otsu
 from scripts import create_maskfrom_labels
@@ -104,6 +105,9 @@ def preprocess(input_dir, filename_contains, coarse_config):
             image_path = os.path.join(input_dir, input_file)
             if os.path.isdir(image_path): continue
             itk_image = sitk.ReadImage(image_path)
+
+            #replace reserved keywords
+            input_file = input_file.replace(NN_INPUT_FILE, '').replace(NN_INPUT_FOREGROUND, '')
 
             #store orig spacing and size
             img_size_map_orig[split_filename(input_file)[0]] = np.concatenate(
@@ -310,12 +314,10 @@ if __name__ == "__main__":
     parser.add_argument('--dilation',
                         required=False,
                         type=int,
-                        default=11,
+                        default=13,
                         help="dilation radius used to create the foreground mask of the fine stage"
                         )
-    parser.add_argument('--postprocess',
-                        action='store_true')
 
     args = parser.parse_args()
     run_pipeline(args.coarse_config, args.fine_config, args.input_dir, args.output_dir, args.filename_contains, args.gpu,
-                 args.coarse_checkpoint, args.fine_checkpoint, args.dilation, args.postprocess)
+                 args.coarse_checkpoint, args.fine_checkpoint, args.dilation, False)
