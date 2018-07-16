@@ -32,3 +32,4 @@ doc/source/modules.rst
 coarse_stage/
 fine_stage/
 data/
+config/
