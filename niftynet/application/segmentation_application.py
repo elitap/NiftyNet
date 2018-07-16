@@ -25,6 +25,7 @@ from niftynet.layer.post_processing import PostProcessingLayer
 from niftynet.layer.rand_flip import RandomFlipLayer
 from niftynet.layer.rand_rotation import RandomRotationLayer
 from niftynet.layer.rand_spatial_scaling import RandomSpatialScalingLayer
+from niftynet.layer.rand_elastic_deform import RandomElasticDeformationLayer
 
 TRAINING_INPUT = set(['image', 'label', 'weight', 'sampler'])
 FOREGROUND_INFERENCE_INPUT = set(['image', 'foreground'])
@@ -146,6 +147,13 @@ class SegmentationApplication(BaseApplication):
                         self.action_param.rotation_angle_y,
                         self.action_param.rotation_angle_z)
                 augmentation_layers.append(rotation_layer)
+
+            # add deformation layer
+            if self.action_param.do_elastic_deformation:
+                augmentation_layers.append(RandomElasticDeformationLayer(
+                    num_controlpoints=self.action_param.num_ctrl_points,
+                    std_deformation_sigma=self.action_param.deformation_sigma,
+                    proportion_to_augment=self.action_param.proportion_to_deform))
 
         volume_padding_layer = []
         if self.net_param.volume_padding_size:
