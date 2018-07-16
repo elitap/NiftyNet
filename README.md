@@ -2,6 +2,16 @@
 
 Tappeiner E, Pöll S, Hönig M, Raudaschl FP, Zaffino P, Spadea FM, Sharp CG, Schubert R, Fritscher K (2018) Efficient Multi-Organ Segmentation of the Head and Neck area using Hierarchical Neural Networks. Submitted to CARS.
 
+### Segment a Head&Neck CT Scan
+After the installation a CT scan can be segmented with our pretrained models using the *inference_pipeline.py* script, located in the root direcotry of our fork:
+
+* `python inference_pipeline.py --coarse_config config/coarse_stage_configs/hr3d_half_e-3_16-72_dice_1024s.ini --fine_config config/fine_stage_configs/hr3d_h_e-3_16-72_d_100k__full_e-4_24-24_gdsc_1024s_dil13.ini --input_dir path_to_dir/with/CTs --output_dir path_to_result_dir --coarse_checkpoint 100000 --fine_checkpoint 50000 --dilation 13`
+
+Detailed information about the command line parameter used with the script can be retrieved by typing `python inference_pipeline.py --help`
+
+
+### Train Your own Model
+
 #### Dataset
 The data used can be downloaded [here][dataset].
 
