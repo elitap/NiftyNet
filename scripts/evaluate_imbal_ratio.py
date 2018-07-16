@@ -102,6 +102,33 @@ def evaluate_resultfile(result_file):
     group.describe(percentiles=[]).round(3).to_csv(evaluated_result)
 
 
+
+def print_histogram(resfile, window_size_filter=[], dataset_size_filter=[], test_train_filter=[]):
+
+    df = pandas.read_csv(resfile)
+
+    df = df[df['Datasize'].isin(dataset_size_filter) & df['Windowsize'].isin(window_size_filter) & df['Dataset'].isin(test_train_filter)]
+
+    all_organs = [name.rstrip() for name in LABELS.keys()]
+
+    fig, ax = plt.subplots(nrows=2, ncols=4, figsize=(16, 10))
+
+    # for dataset_size in ['full', 'half', 'quarter']:
+    for cnt, organ in enumerate(all_organs):
+        df.hist(column=organ, ax=ax[cnt/4, cnt % 4], bins=50)
+        ax[cnt / 4, cnt % 4].set_ylim([0, 250])
+        #ax[cnt / 4, cnt % 4].set_xlim([0, 1])
+
+    name = '-'.join(test_train_filter)+"_"+'-'.join(str(e) for e in window_size_filter)+"_"+'-'.join(dataset_size_filter)
+    fig.suptitle(name)
+    plt.show();
+    filename = ("../results/img/l2voxel_no_bg_hist_%s.eps") % name
+    print filename
+
+    fig.savefig(filename, dpi=75)
+
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog='')
 
@@ -111,7 +138,8 @@ if __name__ == "__main__":
                         )
 
     args = parser.parse_args()
-    evaluate_resultfile(args.resultfile)
+    print_histogram(args.resultfile, window_size_filter=[48], dataset_size_filter=["quarter"], test_train_filter=["Train"])
+    #evaluate_resultfile(args.resultfile)
     #plot_all_means(args.resfile, test_train_filter=["Train"])
     #plot_imbal_statistics(args.resfile, organ_filter=[], window_size_filter=[96], dataset_size_filter=["full"], test_train_filter=["Train"])
 

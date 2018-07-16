@@ -4,8 +4,8 @@ import numpy as np
 import os
 
 
-ST1_CONFIG = {"full": ("", [96]), "half": ("_half", [96, 48]), "quarter": ("_quarter", [48])}
-ST2_CONFIG = {"full": ("", [48, 24])}
+ST1_CONFIG = {"full": ("", [96, 48, 24, 16, 8]), "half": ("_half", [96, 48, 24, 16, 8]), "quarter": ("_quarter", [48, 24, 16, 8])}
+ST2_CONFIG = {"full": ("", [48, 24, 16])}
 
 def get_ratio(itk_img, kernel_size):
 

@@ -24,16 +24,20 @@ DATA_PATH = "./data/HaN_MICCAI2015_Dataset/%s%s"
 
 PATH_POSTFIX_COARSE = {"full": "", "half": "_half", "quarter": "_quarter"}
 SPACING_COARSE = {"full": (1.1, 1.1, 3.0), "half": (2.2, 2.2, 3.0), "quarter": (4.4, 4.4, 3.0)}
-WINDOW_SIZE_COARSE = {"full": [(96, 96, 72)], "half": [(96, 96, 72), (48, 48, 48)], "quarter": [(48, 48, 48)]}
+WINDOW_SIZE_COARSE = {"full": [(96, 96, 72), (48, 48, 48), (24, 24, 24), (16, 16, 16), (8, 8, 8)], "half": [(96, 96, 72), (48, 48, 48), (24, 24, 24), (16, 16, 16), (8, 8, 8)], "quarter": [(48, 48, 48), (24, 24, 24), (16, 16, 16), (8, 8, 8)]}
 
 PATH_POSTFIX_FINE = {"full": ""}
 SPACING_FINE = {"full": (1.1, 1.1, 3.0)}
-WINDOW_SIZE_FINE = {"full": [(48, 48, 48), (24, 24, 24)]}
+WINDOW_SIZE_FINE = {"full": [(48, 48, 48), (24, 24, 24), (16, 16, 16)]}
 
 AXCODES = ('A', 'R', 'S')
 SAMPLE_SIZE = 1024
 
-HEADER = "Dataset,Datasize,Windowsize,File,Sample," + ','.join([organ for organ in LABELS.keys()])
+#HEADER = "Dataset,Datasize,Windowsize,File,Sample," + ','.join([organ for organ in LABELS.keys()])
+#DF_ROW = {name: '' for name in HEADER.split(',')}
+
+
+HEADER = "Dataset,Datasize,Windowsize,File,Sample," +(','.join([organ for organ in LABELS.keys()])+",Background")
 DF_ROW = {name: '' for name in HEADER.split(',')}
 
 
@@ -116,13 +120,17 @@ def get_imbal_ratio(result_file, dataset, method, foreground_filter, spacings, p
                     image_window = data['label'][x_start:x_end, y_start:y_end, z_start:z_end, ...]
                     unique, cnt = np.unique(image_window.flatten(), return_counts=True)
 
+                    num_voxel = np.size(image_window.flatten())
                     DF_ROW['Sample'] = window_id
                     background_idx = np.where(unique == 0)
                     background_cnt = cnt[background_idx][0] if np.size(background_idx) > 0 else 0.0
+                    DF_ROW["Background"] = float(background_cnt) / float(num_voxel)
                     for organ, id in LABELS.iteritems():
                         organ_idx = np.where(unique == id)
                         organ_cnt = cnt[organ_idx][0] if np.size(organ_idx) > 0 else 0.0
-                        ratio = organ_cnt/background_cnt if background_cnt != 0.0 else 1.0
+                        #ratio = organ_cnt/background_cnt if background_cnt != 0.0 else 1.0
+                        ratio = float(organ_cnt) / float(num_voxel)
+                        assert (ratio <= 1.0)
                         DF_ROW[organ] = ratio
                         ratio_sum += ratio
 
@@ -141,7 +149,7 @@ if __name__ == "__main__":
                         )
     parser.add_argument('--dataset',
                         choices=['Train', 'Test'],
-                        default='Train'
+                        default='Test'
                         )
     parser.add_argument('--method',
                         choices=['weighted', 'uniform'],

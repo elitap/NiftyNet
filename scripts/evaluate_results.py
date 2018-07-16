@@ -3,6 +3,8 @@ import numpy as np
 import argparse
 import os
 import matplotlib.pyplot as plt
+import defs
+from defs import LABELS
 
 MODEL_BASE_PATH = "tune_models%s"
 
@@ -141,13 +143,27 @@ def create_boxplot(result_file, model, checkpoint, value='Dice', stage=''):
 
 def evaluate_resultfile(result_file):
     full_df = pd.read_csv(result_file)
-    full_df.drop(["File","Organ"], axis=1, inplace=True)
+    small_organs = full_df[full_df['Organ'].isin(defs.SMALL_ORGANS.keys())].copy()
+    big_organs = full_df[full_df['Organ'].isin(defs.BIG_ORGANS.keys())].copy()
+
+    full_df.drop(["File", "Organ"], axis=1, inplace=True)
+    small_organs.drop(["File", "Organ"], axis=1, inplace=True)
+    big_organs.drop(["File", "Organ"], axis=1, inplace=True)
+
     grouped_df = full_df.groupby(['Model', 'Checkpoint'])
+    grouped_small_organs = small_organs.groupby(['Model', 'Checkpoint'])
+    grouped_big_organs = big_organs.groupby(['Model', 'Checkpoint'])
 
     filename_split = os.path.split(result_file)
 
     evaluated_result = os.path.join(filename_split[0],os.path.splitext(filename_split[1])[0] + "_evaluated.csv")
     grouped_df.describe(percentiles=[]).round(2).to_csv(evaluated_result)
+
+    evaluated_result = os.path.join(filename_split[0],os.path.splitext(filename_split[1])[0] + "_evaluated_small.csv")
+    grouped_small_organs.describe(percentiles=[]).round(2).to_csv(evaluated_result)
+
+    evaluated_result = os.path.join(filename_split[0],os.path.splitext(filename_split[1])[0] + "_evaluated_big.csv")
+    grouped_big_organs.describe(percentiles=[]).round(2).to_csv(evaluated_result)
 
 
 def evaluate_resultfile_organwise(result_file, modelfilter = []):
@@ -161,7 +177,42 @@ def evaluate_resultfile_organwise(result_file, modelfilter = []):
     filename_split = os.path.split(result_file)
 
     evaluated_result = os.path.join(filename_split[0],os.path.splitext(filename_split[1])[0] + "_evaluated_organwise.csv")
-    gd.describe(percentiles=[]).round(2).to_csv(evaluated_result)
+    result_df = gd.describe(percentiles=[]).round(2)
+    result_df.to_csv(evaluated_result)
+
+    return result_df
+
+def evauluate_evaluated_result(organwise_result_df, result_file):
+    ID_COL = "id"
+
+    df = organwise_result_df
+    df.reset_index(inplace=True)
+
+    all_organs = [name.rstrip() for name in LABELS.keys()]
+    best_config = pd.DataFrame()
+
+    for organ in all_organs:
+        ofilt = df[(df["Organ"] == organ)]
+        hd95max = ofilt[ofilt[("95haus_dist", "mean")] == ofilt[("95haus_dist", "mean")].max()].copy()
+        hd95max[ID_COL] = "hd95max"
+        best_config = best_config.append(hd95max, ignore_index=True)
+        hd95min = ofilt[ofilt[("95haus_dist", "mean")] == ofilt[("95haus_dist", "mean")].min()].copy()
+        hd95min[ID_COL] = "hd95min"
+        best_config = best_config.append(hd95min, ignore_index=True)
+
+        dicemax = ofilt[ofilt[("dice", "mean")] == ofilt[("dice", "mean")].max()].copy()
+        dicemax[ID_COL] = "dicemax"
+        best_config = best_config.append(dicemax, ignore_index=True)
+        dicemin = ofilt[ofilt[("dice", "mean")] == ofilt[("dice", "mean")].min()].copy()
+        dicemin[ID_COL] = "dicemin"
+        best_config = best_config.append(dicemin, ignore_index=True)
+
+    filename_split = os.path.split(result_file)
+    evaluated_result = os.path.join(filename_split[0],
+                                    os.path.splitext(filename_split[1])[0] + "_evaluated_organwise_best.csv")
+    best_config.to_csv(evaluated_result)
+
+        #collect in one df with id for min max hd or dice
 
 
 if __name__ == "__main__":
@@ -175,7 +226,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     evaluate_resultfile(args.resultfile)
-    evaluate_resultfile_organwise(args.resultfile)
+    organwise_rsult_df = evaluate_resultfile_organwise(args.resultfile)
+    evauluate_evaluated_result(organwise_rsult_df, args.resultfile)
 
     #create_boxplots_organ_avg(result, stage)
     #create_lineplots(result)

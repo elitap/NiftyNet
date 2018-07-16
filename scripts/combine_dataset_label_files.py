@@ -53,12 +53,15 @@ def combineLabels(subjdir, outdir, rescale):
         if rescale:
             volume = resample(SPACING, volume, False)
 
+        volume.SetOrigin([0, 0, 0])
         sitk.WriteImage(volume, os.path.join(outdir, subjectId+VOLUME_POSTFIX))
 
         itklabel = sitk.Image(volume.GetSize(), sitk.sitkUInt8)
         label = sitk.GetArrayFromImage(itklabel)
 
         label_cnt = 0
+
+        print "'" + subjectId + "': (" + str(volume.GetSize()) + ", " + str(volume.GetSpacing()) + "), "
 
         for key, value in LABELS.iteritems():
             labelpath = os.path.join(subjdir, LABEL_DIR, key+".nrrd")
@@ -84,9 +87,12 @@ def combineLabels(subjdir, outdir, rescale):
         itklabel = sitk.GetImageFromArray(label)
         itklabel.SetOrigin(volume.GetOrigin())
         itklabel.SetSpacing(volume.GetSpacing())
+        itklabel.SetOrigin([0, 0, 0])
         sitk.WriteImage(itklabel, os.path.join(outdir, subjectId + LABEL_POSTFIX))
 
-        print label_cnt, "labels found for ", subjectId
+        #'0522c0070': ((540, 540, 128), (1.1, 1.1, 3.0)),
+
+        #print label_cnt, "labels found for ", subjectId
 
 
 def combineLabelsAll(homedir, outdir, rescale):

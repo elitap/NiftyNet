@@ -5,13 +5,17 @@ import argparse
 import subprocess
 import uuid
 from defs import LABELS
-from defs import UP_SCALE_SUBDIR
+from defs import ORIG_SCALE_SUBDIR
+from multiprocessing.pool import ThreadPool
+import threading
 
-RESULT_SUB_DIR = "output/%s/" + UP_SCALE_SUBDIR
+RESULT_SUB_DIR = "output/%s/" + ORIG_SCALE_SUBDIR
 GT_FILTER = "segmentation"
 ID_IDX = 9
 
 MEASURES = ['dice', 'haus_dist']
+
+mutex = threading.Lock()
 
 def getGroundTruth(model, result_file, gt_path):
     id = result_file[:ID_IDX]
@@ -78,7 +82,7 @@ def getPlastimatchResults(gt_itk, gt_organ_np, result_itk, result_organ_np):
     return res_string
 
 
-def getMeasurements(result_file, gt_file, model, checkpoint, use_plastimatch):
+def getMeasurements((result_file, gt_file, model, checkpoint, use_plastimatch, fileptr)):
     print "eval", result_file, gt_file, model, checkpoint
     gt_itk = sitk.ReadImage(gt_file)
     gt_np = sitk.GetArrayFromImage(gt_itk)
@@ -89,7 +93,6 @@ def getMeasurements(result_file, gt_file, model, checkpoint, use_plastimatch):
     np.testing.assert_almost_equal(gt_itk.GetSpacing(), result_itk.GetSpacing(), 5, "Spacing dimension does not match")
 
     result_strings = []
-    header = None
 
     for key, value in LABELS.iteritems():
         gt_organ_np = np.zeros_like(gt_np, dtype=np.uint8) #maybeproblem with datatype
@@ -97,9 +100,6 @@ def getMeasurements(result_file, gt_file, model, checkpoint, use_plastimatch):
 
         gt_organ_np[gt_np == value] = 1
         result_organ_np[result_np == value] = 1
-
-        if header is None:
-            header = writeHeader(use_plastimatch)
 
         res_string = ''
         if use_plastimatch:
@@ -112,45 +112,57 @@ def getMeasurements(result_file, gt_file, model, checkpoint, use_plastimatch):
 
         organ_result_string = ("%s,%s,%s,%s," + res_string) % (model, checkpoint, os.path.split(result_file)[1], key)
         result_strings.append(organ_result_string)
-        print organ_result_string
-    return header, result_strings
+        print threading.currentThread(), organ_result_string
+
+    mutex.acquire()
+    try:
+        for result in result_strings:
+            fileptr.write(result + "\n")
+            fileptr.flush()
+    finally:
+        mutex.release()
 
 
-def evaluate(gt_base_path, result_base_path, result_file, single_checkpoint, use_plastimatch):
-    header = None
 
-    with open(result_file, 'w') as fileptr:
-        for result_dir in os.listdir(result_base_path):
 
-            result_sub_dir = RESULT_SUB_DIR
-            if (not "half" in result_dir) and (not "quarter" in result_dir):
-                result_sub_dir = os.path.split(result_sub_dir)[0]
+def evaluate(gt_base_path, result_base_path, result_file, single_checkpoint, use_plastimatch, result_dir, threads):
+    data = []
+    fileptr = open(result_file, 'w')
+    header = writeHeader(use_plastimatch)
+    fileptr.write(header + "\n")
+    fileptr.flush()
 
-            full_result_dir = os.path.join(result_base_path, result_dir)
 
-            checkpoints = []
-            if single_checkpoint is None:
-                checkpoints = range(32000, 50001, 2000)
+    for model_dir in os.listdir(result_base_path):
+
+        #if (not "half" in model_dir) and (not "quarter" in model_dir):
+        #    result_dir = os.path.split(result_dir)[0]
+
+        full_result_dir = os.path.join(result_base_path, model_dir)
+
+        checkpoints = []
+        if single_checkpoint is None:
+            checkpoints = range(32000, 50001, 2000)
+        else:
+            checkpoints.append(single_checkpoint)
+
+        for checkpoint in checkpoints:
+            checkpoint_dir = os.path.join(full_result_dir, result_dir) % str(checkpoint)
+            if os.path.isdir(checkpoint_dir):
+                for result_file in os.listdir(checkpoint_dir):
+                    full_result_file = os.path.join(checkpoint_dir, result_file)
+                    full_gt_file = getGroundTruth(model_dir, result_file, gt_base_path)
+                    if full_gt_file is not None:
+                        data.append([full_result_file, full_gt_file, model_dir, checkpoint, use_plastimatch, fileptr])
             else:
-                checkpoints.append(single_checkpoint)
+                print "Checkpoint not found: ", checkpoint_dir
+                return
 
-            for checkpoint in checkpoints:
-                checkpoint_dir = os.path.join(full_result_dir, result_sub_dir) % str(checkpoint)
-                if os.path.isdir(checkpoint_dir):
-                    for result_file in os.listdir(checkpoint_dir):
-                        full_result_file = os.path.join(checkpoint_dir, result_file)
-                        full_gt_file = getGroundTruth(result_dir, result_file, gt_base_path)
-                        if full_gt_file is not None:
-                            one_file_header, one_file_results = getMeasurements(full_result_file, full_gt_file, result_dir, checkpoint, use_plastimatch)
-                            if header is None:
-                                header = one_file_header
-                                fileptr.write(header + "\n")
-                                fileptr.flush()
-                            for result in one_file_results:
-                                fileptr.write(result + "\n")
-                                fileptr.flush()
-                else:
-                    print "Checkpoint not found: ", checkpoint_dir
+    t = ThreadPool(threads)
+    t.map(getMeasurements, data)
+
+    fileptr.close()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog='')
@@ -171,6 +183,10 @@ if __name__ == "__main__":
                         )
     parser.add_argument('--useplastimatch',
                         action='store_true')
+    parser.add_argument('--threads','-t',
+                        required=False,
+                        type=int,
+                        default=1)
 
     args = parser.parse_args()
-    evaluate(args.gtdir, args.modeldir, args.resultfile, args.checkpoint, args.useplastimatch)
+    evaluate(args.gtdir, args.modeldir, args.resultfile, args.checkpoint, args.useplastimatch, RESULT_SUB_DIR, args.threads)

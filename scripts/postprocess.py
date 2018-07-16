@@ -7,7 +7,8 @@ from defs import LABELS
 POST_PROC_RES_DIR = "postprocess"
 
 
-def filter_using_coarse_out(res_itk, filter_itk, dilation_radius):
+def filter_using_coarse_out(filter_itk, res_itk, dilation_radius):
+
     cast_img_filter = sitk.CastImageFilter()
     cast_img_filter.SetOutputPixelType(sitk.sitkUInt8)
     filter_itk = cast_img_filter.Execute(filter_itk)
@@ -16,9 +17,12 @@ def filter_using_coarse_out(res_itk, filter_itk, dilation_radius):
     res_np = sitk.GetArrayFromImage(res_itk_new)
     filter_np = sitk.GetArrayFromImage(filter_itk)
     for key, value in LABELS.iteritems():
+
+        #print key, value
+
         filter_cp = np.copy(filter_np)
-        filter_cp[filter_cp != value] = 0
-        filter_cp[filter_cp == value] = 1
+        filter_cp[filter_np != value] = 0
+        filter_cp[filter_np == value] = 1
 
         filter_itk = sitk.GetImageFromArray(filter_cp)
         filter_itk = cast_img_filter.Execute(filter_itk)
@@ -29,9 +33,9 @@ def filter_using_coarse_out(res_itk, filter_itk, dilation_radius):
         dilation.SetBackgroundValue(0)
         filter_itk = dilation.Execute(filter_itk)
 
-        filter_cp = sitk.GetArrayFromImage(filter_itk)
+        dil_filter_cp = sitk.GetArrayFromImage(filter_itk)
 
-        res_np[(filter_cp == 0) & (res_np == value)] = 0
+        res_np[(dil_filter_cp == 0) & (res_np == value)] = 0
 
     new_res_itk = sitk.GetImageFromArray(res_np)
     new_res_itk.SetSpacing(res_itk.GetSpacing())
@@ -41,6 +45,8 @@ def filter_using_coarse_out(res_itk, filter_itk, dilation_radius):
     return new_res_itk
 
 
+
+
 def postproc(resdir, postprocdir, filter_dir, coarse_stage_out_name_filter, dilation_radius):
     if not os.path.exists(postprocdir):
         os.mkdir(postprocdir)
@@ -48,11 +54,11 @@ def postproc(resdir, postprocdir, filter_dir, coarse_stage_out_name_filter, dila
         full_file = os.path.join(resdir, res_file)
         if os.path.isfile(full_file):
             id = res_file[0:9]
-
+            
             for filter in os.listdir(filter_dir):
                 full_filter = os.path.join(filter_dir, filter)
                 if os.path.isfile(full_filter) and id in filter and coarse_stage_out_name_filter in filter:
-
+                    
                     filter_itk = sitk.ReadImage(full_filter)
                     res_itk = sitk.ReadImage(full_file)
                     np.testing.assert_almost_equal(filter_itk.GetSpacing(), res_itk.GetSpacing(), 5,
@@ -60,6 +66,7 @@ def postproc(resdir, postprocdir, filter_dir, coarse_stage_out_name_filter, dila
                     np.testing.assert_almost_equal(filter_itk.GetSize(), res_itk.GetSize(), 5,
                                                    "Size dimension does not match")
 
+                    #new_res_itk = old_postproc(filter_itk, res_itk, dilation_radius)
                     new_res_itk = filter_using_coarse_out(filter_itk, res_itk, dilation_radius)
 
                     new_file = os.path.join(postprocdir, res_file[0:9] + "_out_postproc.nii.gz")
@@ -70,11 +77,14 @@ def postproc(resdir, postprocdir, filter_dir, coarse_stage_out_name_filter, dila
                         print coarse_stage_out_name_filter, "not found in", filter
 
 
-def filter_using_coarse_mask(filter_itk, res_itk, dilation_radius):
+
+
+def old_postproc(filter_itk, res_itk, dilation_radius):
+
     cast_img_filter = sitk.CastImageFilter()
     cast_img_filter.SetOutputPixelType(sitk.sitkUInt8)
     filter_itk = cast_img_filter.Execute(filter_itk)
-
+    
     dilation = sitk.BinaryDilateImageFilter()
     dilation.SetKernelType(sitk.sitkBox)
     dilation.SetKernelRadius(dilation_radius)

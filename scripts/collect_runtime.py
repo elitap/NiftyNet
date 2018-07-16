@@ -17,7 +17,7 @@ def collect_info(modeldir, configs, resultfile, log):
 
     with open(resultfile, "w") as resptr:
 
-        resptr.write("model,size,runtime\n")
+        resptr.write("model,size,runtime,imgs\n")
 
         with open(configs, "r") as fptr:
             for config in fptr:
@@ -28,13 +28,27 @@ def collect_info(modeldir, configs, resultfile, log):
                 full_filename = os.path.join(modeldir, config, filename)
                 print full_filename
 
-                line = subprocess.check_output(['tail', '-1', full_filename]).strip()
-                runtime = line.split(' ')[-1][:-2]
-                try:
-                    float(runtime)
-                except ValueError:
-                    print "Not a float"
-                    continue
+
+                # line = subprocess.check_output(['tail', '-1', full_filename]).strip()
+                # before iterating over
+                img_cnt = 0
+                runtime = 0
+                with open(full_filename, "r") as infptr:
+                    for line in infptr:
+                        if "SegmentationApplication stopped" in line:
+                            runtime_str = line.strip().split(' ')[-1][:-2]
+                            try:
+                                runtime += float(runtime_str)
+                            except ValueError:
+                                print "Not a float"
+                                break
+
+                        if "grid sampling window sizes: {" in line:
+                            img_cnt += 1
+
+
+
+
 
                 size = "full"
                 if "half" in config:
@@ -42,7 +56,7 @@ def collect_info(modeldir, configs, resultfile, log):
                 if "quarter" in config:
                     size = "quarter"
 
-                resptr.write(config+','+size+','+runtime+"\n")
+                resptr.write(config+','+size+','+str(runtime)+','+str(img_cnt)+"\n")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog='')
@@ -66,4 +80,4 @@ if __name__ == "__main__":
                         )
 
     args = parser.parse_args()
-    collect_info(args.dir, args.config, args.result, args.log)
+    collect_info(args.modelBaseDir, args.config, args.resultfile, args.log)

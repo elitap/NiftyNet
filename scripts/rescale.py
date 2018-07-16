@@ -3,21 +3,24 @@ import argparse
 import SimpleITK as sitk
 import numpy as np
 import os
-from defs import ORIG_SIZE
-from defs import UP_SCALE_SUBDIR
+from defs import DATASET_SIZE_MAP
+from defs import DATASET_SCALE_SUBDIR
+
+from defs import ORIG_SIZE_MAP
+from defs import ORIG_SCALE_SUBDIR
 
 
 VALID_FILES = [".mha", ".nrrd", ".mhd", ".nii", ".gz"]
 
 RESULTDIR = "output/%s"
 
-def resample(infile, outfile, spacingScale, interpolationtype, origsize):
+def resample(infile, outfile, spacingScale, interpolationtype, origsize, sizemap):
     itk_img = sitk.ReadImage(infile)
 
     if origsize:
         id = os.path.split(infile)[1][:9]
-        newSize = ORIG_SIZE[id][0]
-        newSpacing = ORIG_SIZE[id][1]
+        newSize = sizemap[id][0]
+        newSpacing = sizemap[id][1]
     else:
         newSpacing = np.array(itk_img.GetSpacing()) * float(spacingScale)
         #newSpacing = np.floor(newSpacing * 10)/10
@@ -50,7 +53,7 @@ def resample(infile, outfile, spacingScale, interpolationtype, origsize):
     sitk.WriteImage(resampled_img, outfile)
 
 
-def resampleFolder(inpath, outpath, scale="-1", volfilter="volume", origsize=True):
+def resampleFolder(inpath, outpath, size_map=ORIG_SIZE_MAP, scale=0, volfilter="volume"):
     if not os.path.exists(outpath):
         os.mkdir(outpath)
     for file in os.listdir(inpath):
@@ -58,7 +61,7 @@ def resampleFolder(inpath, outpath, scale="-1", volfilter="volume", origsize=Tru
             infile = os.path.join(inpath, file)
             outfile = os.path.join(outpath, file)
             interplationType = sitk.sitkBSpline if volfilter in file else sitk.sitkNearestNeighbor
-            resample(infile, outfile, scale, interplationType, origsize)
+            resample(infile, outfile, scale, interplationType, scale == 0, size_map)
         else:
             print file, "not a valid file"
 
@@ -73,10 +76,11 @@ def getOriginalMeasurements(path, filter):
     print sizeInfo
 
 
-def resampleAllModelsToOrigsize(model_dir, single_checkpoint):
+def resampleAllModelsToOrigsize(model_dir, single_checkpoint, predefinedScale):
     for model in os.listdir(model_dir):
         full_result_dir = os.path.join(model_dir, model)
-        if ("half" in model or "quarter" in model) and os.path.isdir(full_result_dir):
+        #if ("half" in model or "quarter" in model) and os.path.isdir(full_result_dir):
+        if os.path.isdir(full_result_dir):
             checkpoints = []
             if single_checkpoint is None:
                 checkpoints = range(32000, 50001, 2000)
@@ -85,12 +89,18 @@ def resampleAllModelsToOrigsize(model_dir, single_checkpoint):
             for checkpoint in checkpoints:
                 checkpoint_dir = os.path.join(full_result_dir, RESULTDIR) % str(checkpoint)
                 if os.path.exists(checkpoint_dir):
-                    resampleFolder(checkpoint_dir, os.path.join(checkpoint_dir, UP_SCALE_SUBDIR))
+                    if "orig" in predefinedScale:
+                        resampleFolder(checkpoint_dir, os.path.join(checkpoint_dir, ORIG_SCALE_SUBDIR), ORIG_SIZE_MAP)
+                    else:
+                        resampleFolder(checkpoint_dir, os.path.join(checkpoint_dir, DATASET_SCALE_SUBDIR), DATASET_SIZE_MAP)
                 else:
                     print "Checkpoint not found: ", checkpoint_dir
 
             if os.path.exists(checkpoint_dir):
-                resampleFolder(checkpoint_dir, os.path.join(checkpoint_dir, UP_SCALE_SUBDIR))
+                if "orig" in predefinedScale:
+                    resampleFolder(checkpoint_dir, os.path.join(checkpoint_dir, ORIG_SCALE_SUBDIR), ORIG_SIZE_MAP)
+                else:
+                    resampleFolder(checkpoint_dir, os.path.join(checkpoint_dir, DATASET_SCALE_SUBDIR), DATASET_SIZE_MAP)
 
 
 if __name__ == "__main__":
@@ -105,6 +115,11 @@ if __name__ == "__main__":
                         required=False,
                         type=str,
                         default=None
+                        )
+    parser.add_argument('--predefinedScale',
+                        required=False,
+                        choices=['orig', 'dataset'],
+                        default='orig'
                         )
     parser.add_argument('--result',
                         required=False,
@@ -126,6 +141,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     if args.scale == -1 and args.result is None:
-        resampleAllModelsToOrigsize(args.datasetpath, args.checkpoint)
+        resampleAllModelsToOrigsize(args.datasetpath, args.checkpoint, args.predefinedScale)
     else:
-        resampleFolder(args.datasetpath, args.result, args.scale, args.volumefilter, args.scale == 0)
+        scalemap = ORIG_SIZE_MAP if "orig" in args.predefinedScale else DATASET_SIZE_MAP
+        resampleFolder(args.datasetpath, args.result, scalemap, args.scale, args.volumefilter)
