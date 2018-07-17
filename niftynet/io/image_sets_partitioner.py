@@ -62,7 +62,8 @@ class ImageSetsPartitioner(object):
                    data_param,
                    new_partition=False,
                    data_split_file=None,
-                   ratios=None):
+                   ratios=None,
+                   model_dir=None):
         """
         Set the data partitioner parameters
 
@@ -82,6 +83,7 @@ class ImageSetsPartitioner(object):
         else:
             self.data_split_file = data_split_file
         self.ratios = ratios
+        self.model_dir = model_dir
 
         self._file_list = None
         self._partition_ids = None
@@ -250,9 +252,14 @@ class ImageSetsPartitioner(object):
             csv_file = os.path.expanduser(mod_spec.get('csv_file', None))
             if not os.path.isfile(csv_file):
                 # writing to the same folder as data_split_file
-                default_csv_file = os.path.join(
-                    os.path.dirname(self.data_split_file),
-                    '{}.csv'.format(modality_name))
+                default_csv_file = ''
+                if not self.model_dir is None:
+                    default_csv_file = os.path.join(self.model_dir,
+                        '{}.csv'.format(modality_name))
+                else:
+                    default_csv_file = os.path.join(
+                        os.path.dirname(self.data_split_file),
+                        '{}.csv'.format(modality_name))
                 tf.logging.info('`csv_file = %s` not found, '
                                 'writing to "%s" instead.',
                                 csv_file, default_csv_file)

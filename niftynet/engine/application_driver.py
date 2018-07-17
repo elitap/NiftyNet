@@ -185,7 +185,8 @@ class ApplicationDriver(object):
                 data_param=data_param,
                 new_partition=do_new_partition,
                 ratios=data_fractions,
-                data_split_file=system_param.dataset_split_file)
+                data_split_file=system_param.dataset_split_file,
+                model_dir=system_param.model_dir)
 
         if data_param and self.is_training and self.validation_every_n > 0:
             assert data_partitioner.has_validation, \
