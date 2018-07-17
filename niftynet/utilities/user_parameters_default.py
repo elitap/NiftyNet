@@ -274,6 +274,16 @@ def add_network_args(parser):
         default='uniform')
 
     parser.add_argument(
+        "--inference_sampling",
+        metavar='TYPE_STR',
+        help="How to sample patches from each loaded image:"
+             " 'grid': samples the whole input in a grid based manner,"
+             " 'foreground': requires the grid to contain foreground, as defined in "
+             "           the foreground mod, unseen parts of the input are set to zero.",
+        choices=['grid', 'foreground'],
+        default='grid')
+
+    parser.add_argument(
         "--queue_length",
         help="Set size of preprocessing buffer queue",
         metavar='',

@@ -29,7 +29,12 @@ from niftynet.layer.rand_spatial_scaling import RandomSpatialScalingLayer
 from niftynet.evaluation.segmentation_evaluator import SegmentationEvaluator
 from niftynet.layer.rand_elastic_deform import RandomElasticDeformationLayer
 
-SUPPORTED_INPUT = set(['image', 'label', 'weight', 'sampler', 'inferred'])
+
+TRAINING_INPUT = set(['image', 'label', 'weight', 'sampler'])
+EVALUATION_INPUT = set(['image', 'label', 'inferred'])
+FOREGROUND_INFERENCE_INPUT = set(['image', 'foreground'])
+INFERENCE_INPUT = set(['image'])
+SUPPORTED_INPUT = FOREGROUND_INFERENCE_INPUT | TRAINING_INPUT | EVALUATION_INPUT
 
 
 class SegmentationApplication(BaseApplication):
@@ -71,19 +76,22 @@ class SegmentationApplication(BaseApplication):
         if self.is_training:
             self.readers = []
             for file_list in file_lists:
-                reader = ImageReader({'image', 'label', 'weight', 'sampler'})
+                reader = ImageReader(TRAINING_INPUT)
                 reader.initialise(data_param, task_param, file_list)
                 self.readers.append(reader)
 
         elif self.is_inference:
             # in the inference process use image input only
-            inference_reader = ImageReader({'image'})
+            input_types = INFERENCE_INPUT
+            if self.net_param.inference_sampling in FOREGROUND_INFERENCE_INPUT:
+                input_types = input_types.union(FOREGROUND_INFERENCE_INPUT)
+            inference_reader = ImageReader(input_types)
             file_list = data_partitioner.inference_files
             inference_reader.initialise(data_param, task_param, file_list)
             self.readers = [inference_reader]
         elif self.is_evaluation:
             file_list = data_partitioner.inference_files
-            reader = ImageReader({'image', 'label', 'inferred'})
+            reader = ImageReader(EVALUATION_INPUT)
             reader.initialise(data_param, task_param, file_list)
             self.readers = [reader]
         else:
@@ -218,7 +226,8 @@ class SegmentationApplication(BaseApplication):
             batch_size=self.net_param.batch_size,
             spatial_window_size=self.action_param.spatial_window_size,
             window_border=self.action_param.border,
-            queue_length=self.net_param.queue_length) for reader in
+            queue_length=self.net_param.queue_length,
+            foreground_name='foreground') for reader in
             self.readers]]
 
     def initialise_balanced_sampler(self):

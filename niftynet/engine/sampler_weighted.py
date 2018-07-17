@@ -75,8 +75,18 @@ def weighted_spatial_coordinates(
     normaliser = flatten_map.sum()
     # get the sorting indexes to that we can invert the sorting later on.
     sorted_indexes = np.argsort(flatten_map)
+    sorted_map = flatten_map[sorted_indexes]
     sorted_data = np.cumsum(
-        np.true_divide(flatten_map[sorted_indexes], normaliser))
+        np.true_divide(sorted_map, normaliser))
+
+    unique = np.unique(flatten_map)
+    for val in unique:
+        #background is not sampled, no randomness required
+        if val == 0:
+            continue
+        permuted_submap = np.random.permutation(sorted_indexes[sorted_map == val])
+        sorted_indexes[sorted_map == val] = permuted_submap
+
 
     middle_coords = np.zeros((n_samples, N_SPATIAL), dtype=np.int32)
     for sample in range(0, n_samples):
