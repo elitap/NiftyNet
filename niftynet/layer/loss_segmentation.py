@@ -395,6 +395,7 @@ def dice(prediction, ground_truth, weight_map=None):
         ground_truth = ground_truth[..., -1]
     one_hot = labels_to_one_hot(ground_truth, tf.shape(prediction)[-1])
 
+    one_hot_summed = tf.sparse_reduce_sum(one_hot, reduction_axes=[0])
     if weight_map is not None:
         n_classes = prediction.shape[1].value
         weight_map_nclasses = tf.reshape(
@@ -410,14 +411,15 @@ def dice(prediction, ground_truth, weight_map=None):
         dice_numerator = 2.0 * tf.sparse_reduce_sum(
             one_hot * prediction, reduction_axes=[0])
         dice_denominator = \
-            tf.reduce_sum(tf.square(prediction), reduction_indices=[0]) + \
-            tf.sparse_reduce_sum(one_hot, reduction_axes=[0])
+            tf.reduce_sum(tf.square(prediction), reduction_indices=[0]) + one_hot_summed
+
     epsilon_denominator = 0.00001
 
     dice_score = dice_numerator / (dice_denominator + epsilon_denominator)
     # dice_score.set_shape([n_classes])
     # minimising (1 - dice_coefficients)
-    return 1.0 - tf.reduce_mean(dice_score)
+    #just consider labels appearing in the ground truth
+    return 1.0 - (tf.reduce_sum(dice_score) / tf.to_float(tf.count_nonzero(one_hot_summed)))
 
 
 def dice_nosquare(prediction, ground_truth, weight_map=None):
