@@ -1,6 +1,6 @@
 [NiftyNet][nifty] fork with code to generate the results of:
 
-Tappeiner E, Pöll S, Hönig M, Raudaschl FP, Zaffino P, Spadea FM, Sharp CG, Schubert R, Fritscher K (2018) Efficient Multi-Organ Segmentation of the Head and Neck area using Hierarchical Neural Networks. Submitted to CARS.
+Tappeiner E, Pöll S, Hönig M, Raudaschl FP, Zaffino P, Spadea FM, Sharp CG, Schubert R, Fritscher K (2018) Simultaneous organ segmentation of the Head and Neck Area: A simple hierarchical Neural Networks approach. Submitted to JCARS.
 
 ### Segment a Head&Neck CT Scan
 After the installation a CT scan can be segmented with our pretrained models using the *inference_pipeline.py* script, located in the root direcotry of our fork:
