@@ -13,7 +13,8 @@ RESULT_SUB_DIR = "output/%s/" + ORIG_SCALE_SUBDIR
 GT_FILTER = "segmentation"
 ID_IDX = 9
 
-MEASURES = ['dice', 'haus_dist']
+MEASURES = ['fp', 'fn', 'tp', 'tn', 'fpr', 'fnr', 'sensitivity', 'ppv', 'specificity', 'accuracy', 'dice']
+#MEASURES = ['dice', 'haus_dist']
 
 mutex = threading.Lock()
 
@@ -29,7 +30,7 @@ def writeHeader(use_plastimatch):
     if use_plastimatch:
         header = "Model,Checkpoint,File,Organ,dice,95haus_dist,avghaus_dist"
     else:
-        header = "Model,Checkpoint,File,Organ" + ",".join(MEASURES)
+        header = "Model,Checkpoint,File,Organ," + ",".join(MEASURES)
     print header
     return header
 
@@ -95,8 +96,8 @@ def getMeasurements((result_file, gt_file, model, checkpoint, use_plastimatch, f
     result_strings = []
 
     for key, value in LABELS.iteritems():
-        gt_organ_np = np.zeros_like(gt_np, dtype=np.uint8) #maybeproblem with datatype
-        result_organ_np = np.zeros_like(result_np, dtype=np.uint8) #maybeproblem with datatype
+        gt_organ_np = np.zeros_like(gt_np, dtype=np.int8) #maybeproblem with datatype
+        result_organ_np = np.zeros_like(result_np, dtype=np.int8) #maybeproblem with datatype
 
         gt_organ_np[gt_np == value] = 1
         result_organ_np[result_np == value] = 1
@@ -107,6 +108,7 @@ def getMeasurements((result_file, gt_file, model, checkpoint, use_plastimatch, f
         else:
             #uses NiftyNet result measurements
             from niftynet.evaluation.pairwise_measures import PairwiseMeasures
+
             measures = PairwiseMeasures(result_organ_np, gt_organ_np, measures=MEASURES, pixdim=gt_itk.GetSpacing())
             res_string = measures.to_string()
 
@@ -182,11 +184,13 @@ if __name__ == "__main__":
                         default=None
                         )
     parser.add_argument('--useplastimatch',
-                        action='store_true')
+                        action='store_true'
+                       )
     parser.add_argument('--threads','-t',
                         required=False,
                         type=int,
-                        default=1)
+                        default=1
+                       )
 
     args = parser.parse_args()
     evaluate(args.gtdir, args.modeldir, args.resultfile, args.checkpoint, args.useplastimatch, RESULT_SUB_DIR, args.threads)
