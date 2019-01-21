@@ -59,6 +59,8 @@ SUPPORTED_NETWORK = {
         'niftynet.network.scalenet.ScaleNet',
     "holisticnet":
         'niftynet.network.holistic_net.HolisticNet',
+    "unet_2d":
+        'niftynet.network.unet_2d.UNet2D',
 
     # classification
     "resnet": 'niftynet.network.resnet.ResNet',
@@ -74,12 +76,16 @@ SUPPORTED_LOSS_GAN = {
 SUPPORTED_LOSS_SEGMENTATION = {
     "CrossEntropy":
         'niftynet.layer.loss_segmentation.cross_entropy',
+    "CrossEntropy_Dense":
+        'niftynet.layer.loss_segmentation.cross_entropy_dense',
     "Dice":
         'niftynet.layer.loss_segmentation.dice',
     "Dice_NS":
         'niftynet.layer.loss_segmentation.dice_nosquare',
     "Dice_Dense":
         'niftynet.layer.loss_segmentation.dice_dense',
+    "Dice_Dense_NS":
+        'niftynet.layer.loss_segmentation.dice_dense_nosquare',
     "GDSC":
         'niftynet.layer.loss_segmentation.generalised_dice_loss',
     "WGDL":
@@ -145,6 +151,52 @@ SUPPORTED_INITIALIZATIONS = {
     'he_uniform': 'niftynet.engine.application_initializer.HeUniform'
 }
 
+SUPPORTED_EVALUATIONS = {
+    'dice': 'niftynet.evaluation.segmentation_evaluations.dice',
+    'jaccard': 'niftynet.evaluation.segmentation_evaluations.jaccard',
+    'Dice': 'niftynet.evaluation.segmentation_evaluations.dice',
+    'Jaccard': 'niftynet.evaluation.segmentation_evaluations.jaccard',
+    'n_pos_ref': 'niftynet.evaluation.segmentation_evaluations.n_pos_ref',
+    'n_neg_ref': 'niftynet.evaluation.segmentation_evaluations.n_neg_ref',
+    'n_pos_seg': 'niftynet.evaluation.segmentation_evaluations.n_pos_seg',
+    'n_neg_seg': 'niftynet.evaluation.segmentation_evaluations.n_neg_seg',
+    'fp': 'niftynet.evaluation.segmentation_evaluations.fp',
+    'fn': 'niftynet.evaluation.segmentation_evaluations.fn',
+    'tp': 'niftynet.evaluation.segmentation_evaluations.tp',
+    'tn': 'niftynet.evaluation.segmentation_evaluations.tn',
+    'n_intersection': 'niftynet.evaluation.segmentation_evaluations'
+                      '.n_intersection',
+    'n_union': 'niftynet.evaluation.segmentation_evaluations.n_union',
+    'specificity': 'niftynet.evaluation.segmentation_evaluations.specificity',
+    'sensitivity': 'niftynet.evaluation.segmentation_evaluations.sensitivity',
+    'accuracy': 'niftynet.evaluation.segmentation_evaluations.accuracy',
+    'false_positive_rate': 'niftynet.evaluation.segmentation_evaluations'
+                           '.false_positive_rate',
+    'positive_predictive_values': 'niftynet.evaluation.segmentation_evaluations'
+                                  '.positive_predictive_values',
+    'negative_predictive_values': 'niftynet.evaluation.segmentation_evaluations'
+                                  '.negative_predictive_values',
+    'intersection_over_union': 'niftynet.evaluation.segmentation_evaluations'
+                               '.intersection_over_union',
+    'informedness': 'niftynet.evaluation.segmentation_evaluations.informedness',
+    'markedness': 'niftynet.evaluation.segmentation_evaluations.markedness',
+    'vol_diff': 'niftynet.evaluation.segmentation_evaluations.vol_diff',
+    'average_distance': 'niftynet.evaluation.segmentation_evaluations'
+                        '.average_distance',
+    'hausdorff_distance': 'niftynet.evaluation.segmentation_evaluations'
+                          '.hausdorff_distance',
+    'hausdorff95_distance': 'niftynet.evaluation.segmentation_evaluations'
+                            '.hausdorff95_distance',
+    'com_ref': 'niftynet.contrib.evaluation.segmentation_evaluations.com_ref',
+    'mse': 'niftynet.evaluation.regression_evaluations.mse',
+    'rmse': 'niftynet.evaluation.regression_evaluations.rmse',
+    'mae': 'niftynet.evaluation.regression_evaluations.mae',
+    'r2': 'niftynet.contrib.evaluation.regression_evaluations.r2',
+    'classification_accuracy': 'niftynet.evaluation.classification_evaluations'
+                               '.accuracy',
+    'roc_auc': 'niftynet.contrib.evaluation.classification_evaluations.roc_auc',
+    'roc': 'niftynet.contrib.evaluation.classification_evaluations.roc',
+}
 
 def select_module(module_name, type_str, lookup_table):
     """
@@ -186,8 +238,8 @@ def select_module(module_name, type_str, lookup_table):
         else:
             if '.' not in module_name:
                 err = 'Could not import {}: ' \
-                      'Incorrect module name format {}. ' \
-                      'Expected "module.object".'.format(type_str, module_name)
+                      'Incorrect module name "{}"; ' \
+                      'expected "module.object".'.format(type_str, module_name)
                 tf.logging.fatal(err)
                 raise ValueError(err)
             err = '{}: Could not import object' \
@@ -303,3 +355,11 @@ class InitializerFactory(ModuleFactory):
         if args is None:
             args = {}
         return init_class.get_instance(args)
+
+class EvaluationFactory(ModuleFactory):
+    """
+    Import an optimiser from niftynet.engine.application_optimiser or
+    from user specified string
+    """
+    SUPPORTED = SUPPORTED_EVALUATIONS
+    type_str = 'evaluation'

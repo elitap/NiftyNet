@@ -28,6 +28,7 @@ class PairwiseMeasures(object):
             'specificity': (self.specificity, 'Spec'),
             'accuracy': (self.accuracy, 'Acc'),
             'fpr': (self.false_positive_rate, 'FPR'),
+            'fnr': (self.false_negative_rate, 'FNR'),
             'ppv': (self.positive_predictive_values, 'PPV'),
             'npv': (self.negative_predictive_values, 'NPV'),
             'dice': (self.dice_score, 'Dice'),
@@ -126,12 +127,12 @@ class PairwiseMeasures(object):
 
     @CacheFunctionOutput
     def n_pos_ref(self):
-        return np.sum(self.ref)
+        return np.sum(self.ref).astype(np.float32)
 
     @CacheFunctionOutput
     def n_neg_ref(self):
         self.check_binary()
-        return np.sum(self.ref == 0)
+        return np.sum(self.ref == 0).astype(np.float32)
 
     @CacheFunctionOutput
     def n_pos_seg(self):
@@ -177,6 +178,9 @@ class PairwiseMeasures(object):
 
     def false_positive_rate(self):
         return self.fp() / self.n_neg_ref()
+
+    def false_negative_rate(self):
+        return self.fn() / self.n_pos_ref()
 
     def positive_predictive_values(self):
         if self.flag_empty:

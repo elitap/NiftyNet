@@ -66,4 +66,4 @@ if __name__ == "__main__":
                         )
 
     args = parser.parse_args()
-    gnerateForgroundMap(args.dir, args.filter)
+    gnerateForgroundMap(args.datasetpath, args.filter)

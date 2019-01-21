@@ -80,8 +80,6 @@ def createbarplot(csvfile):
     fig.savefig("../results/result_figures/95hd_barplot_ead.eps", dpi=150, bbox_inches='tight')
 
 
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog='')
 

@@ -72,7 +72,7 @@ def run_inference(configs, gpu, dataset_splitfile, single_checkpoint, seg_postfi
                     checkpoint_path = MODEL_BASE % (stage, os.path.splitext(config)[0], checkpoint)
 
                     if os.path.exists(checkpoint_path):
-                        cmd = INFERENCE_CMD % (full_config, os.path.join(SAVE_DIR_BASE,str(checkpoint)+seg_postfix), checkpoint, gpu, os.path.abspath(dataset_splitfile))
+                        cmd = INFERENCE_CMD % (full_config, os.path.join(SAVE_DIR_BASE, str(checkpoint)+seg_postfix), checkpoint, gpu, os.path.abspath(dataset_splitfile))
                         logptr.write("execute " + cmd + " \n")
                         logptr.flush()
                         start = time.time()

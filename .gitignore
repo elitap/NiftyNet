@@ -33,3 +33,4 @@ coarse_stage/
 fine_stage/
 data/
 config/
+.ipynb_checkpoints

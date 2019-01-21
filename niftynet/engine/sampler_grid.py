@@ -21,36 +21,40 @@ class GridSampler(Layer, InputBatchQueueRunner):
                  reader,
                  data_param,
                  batch_size,
-                 spatial_window_size=(),
-                 window_border=(),
+                 spatial_window_size=None,
+                 window_border=None,
                  queue_length=10,
-                 foreground_name=None):
-        #TODO assert if foreground name is given but not in data!!!
+                 foreground_name=None,
+                 name='grid_sampler'):
         self.batch_size = batch_size
+        self.border_size = window_border or (0, 0, 0)
         self.reader = reader
-        Layer.__init__(self, name='input_buffer')
+        Layer.__init__(self, name=name)
         InputBatchQueueRunner.__init__(
             self,
             capacity=queue_length,
             shuffle=False)
         tf.logging.info('reading size of preprocessed inputs')
-        #create output resources for the volume not the foreground
         output_sources = self.reader.input_sources.copy()
         output_sources.pop(foreground_name, None)
 
+        output_shapes = self.reader.shapes.copy()
+        output_shapes.pop(foreground_name, None)
+
+        output_dtypes = self.reader.tf_dtypes.copy()
+        output_dtypes.pop(foreground_name, None)
+
+
+        # override all spatial window defined in input
+        # modalities sections
+        # this is useful when do inference with a spatial window
+        # which is different from the training specifications
         self.window = ImageWindow.from_data_reader_properties(
             output_sources,
-            self.reader.shapes,
-            self.reader.tf_dtypes,
-            data_param)
+            output_shapes,
+            output_dtypes,
+            spatial_window_size or data_param)
 
-        if spatial_window_size:
-            # override all spatial window defined in input
-            # modalities sections
-            # this is useful when do inference with a spatial window
-            # which is different from the training specifications
-            self.window.set_spatial_shape(spatial_window_size)
-        self.border_size = window_border
         tf.logging.info('initialised window instance')
         self._create_queue_and_ops(self.window,
                                    enqueue_size=1,
@@ -126,11 +130,13 @@ class GridSampler(Layer, InputBatchQueueRunner):
 
 
 
+
     def filter_foreground_coordinates(self, coordinates, data, image_shapes):
         for shape in image_shapes.values():
-            assert shape == data[self.foreground_name].shape, "Mode found with different shape than the foreground. " \
-                                                              "Foreground based grid sampling is not supported for different" \
-                                                              "sized modes."
+            assert shape == data[
+                self.foreground_name].shape, "Mode found with different shape than the foreground. " \
+                                             "Foreground based grid sampling is not supported for different" \
+                                             "sized modes."
 
         # use first mode to get coordinates, this is valid as all modes must have the same shape as the foreground
         coordinates_key = self.window.names[0]
@@ -152,8 +158,11 @@ class GridSampler(Layer, InputBatchQueueRunner):
         # cast to nparray
         for name in self.window.names:
             new_coordinates[name] = np.array(new_coordinates[name])
-        tf.logging.info('%d out of %d locations containing foreground information', forground_coordinate_cnt, list(coordinates.values())[0].shape[0])
+        tf.logging.info('%d out of %d locations containing foreground information',
+                        forground_coordinate_cnt, list(coordinates.values())[0].shape[0])
         return new_coordinates
+
+
 
 
 def grid_spatial_coordinates(subject_id, img_sizes, win_sizes, border_size):

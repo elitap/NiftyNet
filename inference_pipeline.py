@@ -5,7 +5,10 @@ import subprocess
 import sys
 import SimpleITK as sitk
 import numpy as np
+<<<<<<< HEAD
 import uuid
+=======
+>>>>>>> my_v3
 
 from scripts import calc_foreground_label_otsu
 from scripts import create_maskfrom_labels
@@ -314,6 +317,7 @@ if __name__ == "__main__":
     parser.add_argument('--dilation',
                         required=False,
                         type=int,
+<<<<<<< HEAD
                         default=13,
                         help="dilation radius used to create the foreground mask of the fine stage"
                         )
@@ -321,3 +325,14 @@ if __name__ == "__main__":
     args = parser.parse_args()
     run_pipeline(args.coarse_config, args.fine_config, args.input_dir, args.output_dir, args.filename_contains, args.gpu,
                  args.coarse_checkpoint, args.fine_checkpoint, args.dilation, False)
+=======
+                        default=11,
+                        help="dilation radius used to create the foreground mask of the fine stage"
+                        )
+    parser.add_argument('--postprocess',
+                        action='store_true')
+
+    args = parser.parse_args()
+    run_pipeline(args.coarse_config, args.fine_config, args.input_dir, args.output_dir, args.filename_contains, args.gpu,
+                 args.coarse_checkpoint, args.fine_checkpoint, args.dilation, args.postprocess)
+>>>>>>> my_v3

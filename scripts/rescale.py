@@ -17,19 +17,22 @@ RESULTDIR = "output/%s"
 def resample(infile, outfile, spacingScale, interpolationtype, origsize, sizemap):
     itk_img = sitk.ReadImage(infile)
 
+    print origsize
     if origsize:
         id = os.path.split(infile)[1][:9]
+        print id
         newSize = sizemap[id][0]
         newSpacing = sizemap[id][1]
     else:
+        #newSpacing = np.array([1.1, 1.1, 1.1])
         newSpacing = np.array(itk_img.GetSpacing()) * float(spacingScale)
-        #newSpacing = np.floor(newSpacing * 10)/10
+        newSpacing = np.floor(newSpacing * 5)/5
         imagescale = np.array(itk_img.GetSpacing()) / newSpacing
 
         newSize = np.array(itk_img.GetSize()) * imagescale
 
-        newSpacing[2] = newSpacing[2] / float(spacingScale)
-        newSize[2] = newSize[2] * float(spacingScale)
+        #newSpacing[2] = newSpacing[2] / float(spacingScale)
+        #newSize[2] = newSize[2] * float(spacingScale)
 
         newSize = newSize.round().astype(int).tolist()
         newSpacing = newSpacing.tolist()
@@ -37,7 +40,7 @@ def resample(infile, outfile, spacingScale, interpolationtype, origsize, sizemap
 
     resampler = sitk.ResampleImageFilter()
     resampler.SetInterpolator(interpolationtype)
-
+    print newSize
     # resampler.SetInterpolator(sitk.sitkBSpline)
     resampler.SetSize(newSize)
     resampler.SetOutputSpacing(newSpacing)
@@ -46,22 +49,25 @@ def resample(infile, outfile, spacingScale, interpolationtype, origsize, sizemap
 
     resampled_img.SetOrigin([0, 0, 0])
 
-    unique = np.unique(sitk.GetArrayFromImage(resampled_img))
+    unique = [0]
+    if interpolationtype == 1:
+        unique = np.unique(sitk.GetArrayFromImage(resampled_img))
 
     print infile, spacingScale, resampled_img.GetSpacing(), resampled_img.GetSize(), itk_img.GetSize(), unique, len(unique), "interpolation type: ", interpolationtype
 
     sitk.WriteImage(resampled_img, outfile)
 
 
-def resampleFolder(inpath, outpath, size_map=ORIG_SIZE_MAP, scale=0, volfilter="volume"):
+def resampleFolder(inpath, outpath, size_map=ORIG_SIZE_MAP, scale=-1, volfilter="volume"):
     if not os.path.exists(outpath):
         os.mkdir(outpath)
     for file in os.listdir(inpath):
         if os.path.splitext(file)[1] in VALID_FILES:
             infile = os.path.join(inpath, file)
-            outfile = os.path.join(outpath, file)
+            print infile
+            outfile = os.path.join(outpath, file.replace('nrrd','nii.gz'))
             interplationType = sitk.sitkBSpline if volfilter in file else sitk.sitkNearestNeighbor
-            resample(infile, outfile, scale, interplationType, scale == 0, size_map)
+            resample(infile, outfile, scale, interplationType, scale == -1, size_map)
         else:
             print file, "not a valid file"
 

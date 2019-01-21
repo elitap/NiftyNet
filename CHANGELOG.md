@@ -6,6 +6,33 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.3.0] - 2018-05-15
+### Added
+* Support for 2D image loading optionally using `skimage`, `pillow`, or `simpleitk`
+* Image reader and sampler with `tf.data.Dataset`
+* Class-balanced image window sampler
+* Random deformation as data augmentation with SimpleITK
+* Segmentation loss with dense labels (multi-channel binary labels)
+* Experimental features:
+   - learning-based registration
+   - image classification
+   - model evaluation
+   - new engine design with observer pattern
+
+### Deprecated
+* Deprecating the [CmicLab][cmiclab] repository in favour of [GitHub][github]
+
+[cmiclab]: https://cmiclab.cs.ucl.ac.uk/CMIC/NiftyNet
+[github]: https://github.com/NifTK/NiftyNet
+
+## [0.2.2] - 2018-01-30
+### Added
+* Improvements for running validation iterations during training
+
+### Fixed
+* Bugs when running validation iterations during training
+* Minor bugs in loss function modules, histogram standardisation, user parameter parsing
+
 ## [0.2.1] - 2017-12-14
 ### Added
 * Support for custom network / application as external modules
@@ -34,7 +61,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
    1. SimulatorGAN
    1. VariationalAutoencoder (VAE)
 
-### Removed
+### Fixed
 * Bugs (30+ issues resolved)
 
 ## 0.1.1 - 2017-08-08
@@ -45,9 +72,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * Command line entry points
 * NiftyNet logo
 
-### Removed
+### Fixed
 * Bugs in data augmentation, I/O, sampler
 
-[Unreleased]: https://github.com/NifTK/NiftyNet/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/NifTK/NiftyNet/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/NifTK/NiftyNet/compare/v0.2.2...v0.3.0
+[0.2.2]: https://github.com/NifTK/NiftyNet/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/NifTK/NiftyNet/compare/v0.2.0.post1...v0.2.1
 [0.2.0]: https://github.com/NifTK/NiftyNet/compare/v0.1.1...v0.2.0.post1

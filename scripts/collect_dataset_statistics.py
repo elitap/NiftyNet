@@ -4,7 +4,7 @@ import numpy as np
 import os
 
  
-VALID_FILES = [".mha", ".nrrd", ".mhd"]
+VALID_FILES = [".mha", ".nrrd", ".mhd", ".gz"]
 
 class ImageInfo:
     def __init__(self, file, size, spacing, minMax, labelBB = None):
@@ -35,6 +35,9 @@ def collectImgWithLabels(dataset, labelpostfix, volumepostfix):
  
     dataset = os.path.abspath(dataset)
     imageInfoList = []
+    cnt_datasets = 0
+    cnt_invalid = 0
+    size_dict = dict()
 
     # for test purposes just use some of the files in the dir eg
     # os.listdir(dataset)[:6]
@@ -49,6 +52,17 @@ def collectImgWithLabels(dataset, labelpostfix, volumepostfix):
             for segmentation in os.listdir(dataset):
                 if labelpostfix in segmentation and file[:9] in segmentation:
                     itk_img, segmentationInfo = getImageInfo(segmentation, dataset)
+                    print volumeInfo.file
+                    print segmentationInfo.file
+
+                    size_dict[file[:9]] = (segmentationInfo.size, segmentationInfo.spacing)
+
+                    np_img = sitk.GetArrayFromImage(itk_img)
+                    organ_labels = np.unique(np_img)
+                    cnt_datasets += 1
+                    if not np.array_equal(organ_labels, np.array(range(8))):
+                        print "Not all organs present", organ_labels
+                        cnt_invalid += 1
 
                     #mand_and_par = sitk.BinaryThreshold(itk_img, 5, 8) #lables for right/left parotis and mandibula
 
@@ -61,7 +75,8 @@ def collectImgWithLabels(dataset, labelpostfix, volumepostfix):
                 imageInfoList.append((volumeInfo,segmentationInfo)) #append a tuple (volume, segmentation)
             else:
                 print("no segmentation or foreground found for: ", file)
-
+    print "datsets found", cnt_datasets, "invalid datasets found", cnt_invalid, "valid datasets found", cnt_datasets-cnt_invalid
+    print size_dict
     return imageInfoList
  
  
@@ -76,14 +91,14 @@ def callculateStatistics(imageInfoList):
     for _ ,segmentationInfo in imageInfoList:
         size[label_cnt,:] = segmentationInfo.size
         spacing[label_cnt, :] = segmentationInfo.spacing
-        labelbb[label_cnt, :] = segmentationInfo.labelBB[3:]
+        #labelbb[label_cnt, :] = segmentationInfo.labelBB[3:]
         labelMax[label_cnt] = segmentationInfo.minMax[1]
         label_cnt += 1
 
     medianSpacing = np.around(np.median(spacing,0),2)
     meanSpacing = np.around(np.mean(spacing,0),2)
     print("Volume      size:  max -> x,y,z: ", size.max(0), " min -> x,y,z: ", size.min(0), " avg -> x,y,z: ", size.mean(0), " median -> x,y,z: ", np.median(size,0))
-    print("BoundingBox size:  max -> x,y,z: ", labelbb.max(0), " min -> x,y,z: ", labelbb.min(0), " avg -> x,y,z: ", labelbb.mean(0), " median -> x,y,z: ", np.median(labelbb,0))
+    #print("BoundingBox size:  max -> x,y,z: ", labelbb.max(0), " min -> x,y,z: ", labelbb.min(0), " avg -> x,y,z: ", labelbb.mean(0), " median -> x,y,z: ", np.median(labelbb,0))
     print("Volume   spacing:  max -> x,y,z: ", spacing.max(0), " min -> x,y,z: ", spacing.min(0), " avg -> x,y,z: ", meanSpacing, " medain -> x,y,z: ", medianSpacing)
 
     print("\n")
