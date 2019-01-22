@@ -78,6 +78,10 @@ def combineLabels(subjdir, outdir, rescale):
 
                 npImg = sitk.GetArrayFromImage(itkImg)
 
+                if not np.array_equal(npImg.shape, label.shape):
+                    print("Dimension missmatch skipping: " + subjectId)
+                    break
+
                 label[npImg == 1] = value
 
                 fileptr.write(key + "\n")

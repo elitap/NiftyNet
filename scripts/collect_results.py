@@ -5,11 +5,11 @@ import argparse
 import subprocess
 import uuid
 from defs import LABELS
-from defs import ORIG_SCALE_SUBDIR
+from defs import DATASET_SCALE_SUBDIR
 from multiprocessing.pool import ThreadPool
 import threading
 
-RESULT_SUB_DIR = "output/%s/" + ORIG_SCALE_SUBDIR
+RESULT_SUB_DIR = "output/%s/" + DATASET_SCALE_SUBDIR
 GT_FILTER = "segmentation"
 ID_IDX = 9
 

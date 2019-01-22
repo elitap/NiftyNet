@@ -5,10 +5,7 @@ import subprocess
 import sys
 import SimpleITK as sitk
 import numpy as np
-<<<<<<< HEAD
 import uuid
-=======
->>>>>>> my_v3
 
 from scripts import calc_foreground_label_otsu
 from scripts import create_maskfrom_labels
@@ -261,14 +258,14 @@ def run_pipeline(coarse_config, fine_config, input_dir, output_dir, filename_con
     coarse_config = replace_path_to_search(coarse_config, coarse_data_dir, coarse_data_dir)
     fine_config = replace_path_to_search(fine_config, fine_data_dir, fine_data_dir)
     #coarse stage
-    exec_inference(coarse_config, output_dir=fine_data_dir, gpu=gpu, checkpoint=coarse_cp)
+    exec_inference(coarse_config, output_dir=os.path.abspath(fine_data_dir), gpu=gpu, checkpoint=coarse_cp)
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
     resample_coarse_output(fine_data_dir, output_dir, orig_size_map, nn_size_map, dilation)
     #fine stage
-    exec_inference(fine_config, output_dir=output_dir, gpu=gpu, checkpoint=fine_cp)
+    exec_inference(fine_config, output_dir=os.path.abspath(output_dir), gpu=gpu, checkpoint=fine_cp)
     resample_fine_output(output_dir, orig_size_map, postprocess, dilation)
 
 
@@ -317,16 +314,7 @@ if __name__ == "__main__":
     parser.add_argument('--dilation',
                         required=False,
                         type=int,
-<<<<<<< HEAD
                         default=13,
-                        help="dilation radius used to create the foreground mask of the fine stage"
-                        )
-
-    args = parser.parse_args()
-    run_pipeline(args.coarse_config, args.fine_config, args.input_dir, args.output_dir, args.filename_contains, args.gpu,
-                 args.coarse_checkpoint, args.fine_checkpoint, args.dilation, False)
-=======
-                        default=11,
                         help="dilation radius used to create the foreground mask of the fine stage"
                         )
     parser.add_argument('--postprocess',
@@ -335,4 +323,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     run_pipeline(args.coarse_config, args.fine_config, args.input_dir, args.output_dir, args.filename_contains, args.gpu,
                  args.coarse_checkpoint, args.fine_checkpoint, args.dilation, args.postprocess)
->>>>>>> my_v3
+

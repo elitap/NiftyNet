@@ -17,7 +17,6 @@ RESULTDIR = "output/%s"
 def resample(infile, outfile, spacingScale, interpolationtype, origsize, sizemap):
     itk_img = sitk.ReadImage(infile)
 
-    print origsize
     if origsize:
         id = os.path.split(infile)[1][:9]
         print id
@@ -40,7 +39,6 @@ def resample(infile, outfile, spacingScale, interpolationtype, origsize, sizemap
 
     resampler = sitk.ResampleImageFilter()
     resampler.SetInterpolator(interpolationtype)
-    print newSize
     # resampler.SetInterpolator(sitk.sitkBSpline)
     resampler.SetSize(newSize)
     resampler.SetOutputSpacing(newSpacing)
