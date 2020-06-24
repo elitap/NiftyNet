@@ -1,0 +1,9 @@
+six>=1.10
+nibabel>=2.1.0
+numpy>=1.12
+scipy>=0.18
+configparser
+tensorflow-gpu==1.6 #cuda 9 with cudnn 7.0.4 for pip installation
+pandas
+pillow
+blinker

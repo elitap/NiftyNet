@@ -1,0 +1,9 @@
+torch>=1.4
+pytorch-ignite==0.3.0
+numpy
+nibabel
+tensorboard
+pillow
+scipy
+scikit-image
+monai==0.1.0

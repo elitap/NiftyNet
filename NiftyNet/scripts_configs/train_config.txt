@@ -1,0 +1,5 @@
+#best coarse stage configuration
+hr3d_half_e-3_16-72_dice_1024s.ini
+
+#best fine stage configuration
+#hr3d_h_e-3_16-72_d_100k__full_e-4_24-24_gdsc_1024s_dil13.ini
