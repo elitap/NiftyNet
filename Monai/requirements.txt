@@ -6,4 +6,5 @@ tensorboard
 pillow
 scipy
 scikit-image
-monai==0.1.0
+monai==0.2.0
+
