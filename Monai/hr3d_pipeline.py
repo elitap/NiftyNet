@@ -28,29 +28,29 @@ def prog_args():
                         required=False,
                         type=str,
                         default="../models/hr3d_sample",
-                        help="model directory stores all the checkpoints, logs,"
+                        help="model directory stores all the checkpoints, logs, "
                              "and results"
                         )
     parser.add_argument('--train_data',
                         required=False,
                         type=str,
                         default=None,
-                        help="path to the directory containing the training data"
-                             "if not provided the default path from utils.data.TRAIN_DATA"
+                        help="path to the directory containing the training data "
+                             "if not provided the default path from utils.data.TRAIN_DATA "
                              "is used"
                         )
     parser.add_argument('--test_data',
                         required=False,
                         type=str,
                         default=None,
-                        help="path to the directory containing the test data"
-                             "if not provided the default path from utils.data.TEST_DATA"
+                        help="path to the directory containing the test data "
+                             "if not provided the default path from utils.data.TEST_DATA "
                              "is used"
                         )
     parser.add_argument('--create_foreground',
                         action='store_true',
-                        help="if provided the foreground mask for masking the training"
-                             "and inference of the coarse stage is generated (requires"
+                        help="if provided the foreground mask for masking the training "
+                             "and inference of the coarse stage is generated (requires "
                              "simple itk to be installed)"
                         )
     parser.add_argument('--keys',
@@ -58,23 +58,23 @@ def prog_args():
                         type=str,
                         nargs=3,
                         default=None,
-                        help="keys to identify the volume, ground truth label (containing"
-                             "the segmented organs enumerated in one file) and mask (being"
-                             "a binary file masking the search space for the training and"
-                             "inference), if not provided the default keys from utils.data.DEFAULT_KEYS"
+                        help="keys to identify the volume, ground truth label (containing "
+                             "the segmented organs enumerated in one file) and mask (being "
+                             "a binary file masking the search space for the training and "
+                             "inference), if not provided the default keys from utils.data.DEFAULT_KEYS "
                              "are used"
                         )
     parser.add_argument('--epochs',
                         required=False,
                         type=int,
                         default=60,
-                        help="number of epochs to train"
+                        help="number of epochs to train "
                         )
     parser.add_argument('--cuda',
                         required=False,
                         type=int,
                         default=0,
-                        help="cuda device to train on"
+                        help="cuda device to train on "
                         )
     return parser
 
