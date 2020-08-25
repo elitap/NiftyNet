@@ -1,6 +1,6 @@
 Monai version of the code to generate the results of
 
-Tappeiner E. et al. (2018) Multi-organ segmentation of the Head and Neck Area: An efficient hierarchical Neural Networks approach. Submitted to CARS.
+Tappeiner E. (2019) Multi-organ segmentation of the head and neck area: an efficient hierarchical neural networks approach. International Journal of Computer Assisted Radiology and Surgery. 14. 10.1007/s11548-019-01922-4. 
 
 ###Exec
 
