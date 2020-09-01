@@ -136,8 +136,10 @@ class DLCreator():
         self.fine_stage_dil_radius = 13
 
         if stage is "coarse":
-            self.pixdim = (2.2, 2.2, 2.2)
-            self.spatial_size = [16, 16, 16]
+            #self.pixdim = (2.2, 2.2, 2.2)
+            #self.spatial_size = [16, 16, 16]
+            self.pixdim = (1.1, 1.1, 2.2)
+            self.spatial_size = [24, 24, 24]
             self.num_samples = 72
         else:
             self.pixdim = (1.1, 1.1, 2.2)
@@ -268,6 +270,8 @@ def gen_foreground(train_data: str, test_data: str, keys: dict() = DEFAULT_KEYS)
 
     print("Generating foreground mask ...")
 
+    if keys is None:
+        keys = DEFAULT_KEYS
     if train_data is None:
         train_data = TRAIN_DATA
     if test_data is None:
