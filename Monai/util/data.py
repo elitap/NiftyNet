@@ -136,10 +136,8 @@ class DLCreator():
         self.fine_stage_dil_radius = 13
 
         if stage is "coarse":
-            #self.pixdim = (2.2, 2.2, 2.2)
-            #self.spatial_size = [16, 16, 16]
-            self.pixdim = (1.1, 1.1, 2.2)
-            self.spatial_size = [24, 24, 24]
+            self.pixdim = (2.2, 2.2, 2.2)
+            self.spatial_size = [16, 16, 16]
             self.num_samples = 72
         else:
             self.pixdim = (1.1, 1.1, 2.2)
