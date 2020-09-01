@@ -7,4 +7,5 @@ pillow
 scipy
 scikit-image
 monai==0.2.0
+simpleitk
 
